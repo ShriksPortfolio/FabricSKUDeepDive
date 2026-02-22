@@ -1,0 +1,1920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fabric Capacity Architecture Accelerator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:#FAF8F5;--card:#FFFFFF;--card-secondary:#F5F2EE;
+            --text-primary:#2D2B28;--text-secondary:#6B6560;--text-muted:#9B9590;
+            --accent:#C4653A;--accent-light:rgba(196,101,58,0.06);--accent-glow:rgba(196,101,58,0.22);
+            --green:#5B8C5A;--green-bg:#EEF4ED;--green-glow:rgba(91,140,90,0.2);
+            --orange:#C4883A;--orange-bg:#FDF3E7;
+            --grey-badge:#8B8580;--grey-badge-bg:#F0ECE8;
+            --border:#E8E5E1;--border-hover:#D5D0CB;--dark:#2D2B28;
+            --shadow-xs:0 1px 2px rgba(45,43,40,0.03);
+            --shadow-sm:0 1px 3px rgba(45,43,40,0.05),0 1px 2px rgba(45,43,40,0.03);
+            --shadow-md:0 4px 16px rgba(45,43,40,0.07),0 1px 3px rgba(45,43,40,0.04);
+            --shadow-lg:0 12px 32px rgba(45,43,40,0.1),0 2px 6px rgba(45,43,40,0.04);
+            --shadow-xl:0 20px 48px rgba(45,43,40,0.12),0 4px 12px rgba(45,43,40,0.06);
+            --radius-sm:8px;--radius-md:14px;--radius-lg:22px;--radius-pill:980px;
+            --transition:0.25s cubic-bezier(0.4,0,0.2,1);--transition-slow:0.4s cubic-bezier(0.4,0,0.2,1);
+            --font-body:'Inter',-apple-system,sans-serif;
+            --font-heading:'Fraunces',Georgia,serif;
+            --font-code:'Fira Code','SF Mono','Cascadia Code',monospace;
+            --layer-azure:#0078D4;--layer-capacity:#C4653A;
+            --layer-workspace:#5B8C5A;--layer-items:#7C6BB1;--layer-users:#C4883A;
+        }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:var(--font-body);background:var(--bg);color:var(--text-primary);line-height:1.65;font-size:15px;-webkit-font-smoothing:antialiased}
+
+        .brand-header{max-width:1100px;margin:0 auto;padding:24px 32px 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);transition:var(--transition)}
+        .brand-logo{width:40px;height:40px;background:var(--accent);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);color:white;font-size:18px;font-weight:700}
+        .brand-info{display:flex;flex-direction:column;gap:1px}
+        .brand-label{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent)}
+        .brand-author{font-size:13px;color:var(--text-secondary)}
+
+        .container{max-width:1100px;margin:0 auto;padding:0 32px 60px}
+
+        .hero{padding:48px 0 24px}
+        .hero h1{font-family:var(--font-heading);font-size:38px;font-weight:700;letter-spacing:-0.5px;line-height:1.2}
+        .hero .subtitle{font-size:15px;color:var(--text-secondary);margin-top:10px;max-width:720px}
+
+        .intro-card{background:var(--card);border-left:4px solid var(--accent);border-radius:var(--radius-md);padding:28px 32px;box-shadow:var(--shadow-sm);margin:8px 0 32px;transition:var(--transition)}
+        .intro-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+        .intro-card p{color:var(--text-secondary);font-size:14.5px}
+        .intro-card p+p{margin-top:12px}
+
+        /* Roadmap */
+        .roadmap{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:28px 0 36px}
+        .roadmap-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-md);padding:22px 24px;cursor:pointer;transition:var(--transition-slow);text-decoration:none;color:inherit;position:relative;overflow:hidden}
+        .roadmap-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--accent-light),transparent);opacity:0;transition:var(--transition-slow)}
+        .roadmap-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 0 0 3px var(--accent-light),var(--shadow-lg)}
+        .roadmap-card:hover::before{opacity:1}
+        .roadmap-persona{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--accent);margin-bottom:6px;position:relative}
+        .roadmap-title{font-family:var(--font-heading);font-size:16px;font-weight:600;margin-bottom:6px;position:relative}
+        .roadmap-desc{font-size:13px;color:var(--text-secondary);line-height:1.5;position:relative}
+        .roadmap-sections{margin-top:10px;font-size:12px;color:var(--text-muted);position:relative}
+        .roadmap-sections span{display:inline-block;background:var(--card-secondary);padding:2px 10px;border-radius:var(--radius-pill);margin:2px 4px 2px 0;transition:var(--transition)}
+        .roadmap-card:hover .roadmap-sections span{background:rgba(196,101,58,0.08)}
+
+        .nav-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:40px}
+        .nav-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-pill);font-family:var(--font-body);font-size:13.5px;font-weight:500;color:var(--text-primary);cursor:pointer;text-decoration:none;transition:var(--transition);box-shadow:var(--shadow-xs)}
+        .nav-btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--border-hover);background:var(--card)}
+        .nav-btn.active{background:var(--card);border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 3px var(--accent-light),var(--shadow-sm)}
+
+        .section-anchor{scroll-margin-top:24px}
+        .section-header{display:flex;align-items:center;gap:14px;margin:48px 0 8px}
+        .section-number{width:42px;height:42px;background:var(--dark);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-size:18px;font-weight:700;color:white;transition:var(--transition);box-shadow:var(--shadow-sm)}
+        .section-title-group{flex:1}
+        .section-title{font-family:var(--font-heading);font-size:26px;font-weight:600;letter-spacing:-0.3px}
+        .section-subtitle{font-size:13.5px;color:var(--text-secondary);margin-top:2px}
+
+        /* Layer Indicator */
+        .layer-indicator{display:flex;align-items:center;gap:20px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-md);padding:16px 24px;margin-bottom:20px;transition:var(--transition)}
+        .layer-indicator:hover{border-color:var(--border-hover);box-shadow:var(--shadow-sm)}
+        .layer-diagram{display:flex;flex-direction:column;gap:3px;min-width:160px}
+        .layer-bar{height:8px;border-radius:4px;opacity:0.2;transition:var(--transition-slow)}
+        .layer-bar.active{opacity:1;height:12px}
+        .layer-bar.l-azure{background:var(--layer-azure)}
+        .layer-bar.l-capacity{background:var(--layer-capacity)}
+        .layer-bar.l-workspace{background:var(--layer-workspace)}
+        .layer-bar.l-items{background:var(--layer-items)}
+        .layer-bar.l-users{background:var(--layer-users)}
+        .layer-text{flex:1}
+        .layer-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:2px}
+        .layer-explain{font-size:13px;color:var(--text-secondary);line-height:1.5}
+
+        /* Why Care */
+        .why-care{background:var(--orange-bg);border-radius:var(--radius-md);padding:18px 24px;margin-bottom:24px;display:flex;align-items:flex-start;gap:14px;border:1px solid rgba(196,136,58,0.12);transition:var(--transition)}
+        .why-care:hover{box-shadow:var(--shadow-sm);border-color:rgba(196,136,58,0.25)}
+        .why-care-icon{font-size:20px;margin-top:2px;flex-shrink:0}
+        .why-care-text{font-size:14px;color:var(--text-primary);font-weight:500;line-height:1.55}
+
+        /* Cards */
+        .card{background:var(--card);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);padding:32px;margin-bottom:24px;border:1.5px solid rgba(232,229,225,0.7);transition:var(--transition-slow);position:relative}
+        .card:hover{box-shadow:var(--shadow-md);border-color:var(--border-hover);transform:translateY(-1px)}
+        .card-title{font-family:var(--font-heading);font-size:19px;font-weight:600;margin-bottom:6px;letter-spacing:-0.2px}
+        .card-desc{font-size:14px;color:var(--text-secondary);margin-bottom:20px}
+
+        /* Term Tooltip */
+        .term{position:relative;border-bottom:1.5px dashed var(--accent);cursor:help;transition:var(--transition)}
+        .term:hover{background:var(--accent-light);border-radius:2px}
+        .term .term-tip{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--dark);color:white;font-size:12.5px;font-weight:400;line-height:1.5;padding:12px 16px;border-radius:var(--radius-sm);width:280px;box-shadow:var(--shadow-xl);z-index:100;pointer-events:none}
+        .term .term-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--dark)}
+        .term:hover .term-tip{display:block;animation:evalFadeIn 0.2s ease}
+
+        /* Tables */
+        .data-table{width:100%;border-collapse:collapse;font-size:13.5px}
+        .data-table thead th{text-align:left;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);padding:10px 14px;border-bottom:2px solid var(--border)}
+        .data-table tbody td{padding:12px 14px;border-bottom:1px solid #f0ede9;vertical-align:top;transition:var(--transition)}
+        .data-table tbody tr{transition:var(--transition)}
+        .data-table tbody tr:hover{background:rgba(196,101,58,0.035)}
+        .data-table tbody tr:hover td{color:var(--text-primary)}
+        .data-table tbody tr:last-child td{border-bottom:none}
+        .data-table code{font-family:var(--font-code);font-size:12.5px;background:var(--card-secondary);padding:2px 7px;border-radius:4px}
+
+        .badge{display:inline-block;padding:3px 12px;border-radius:var(--radius-pill);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+        .badge-high{background:var(--green-bg);color:var(--green)}
+        .badge-mid{background:var(--orange-bg);color:var(--orange)}
+        .badge-low{background:var(--grey-badge-bg);color:var(--grey-badge)}
+        .badge-accent{background:var(--accent-light);color:var(--accent)}
+        .badge-dark{background:var(--dark);color:white}
+
+        .control-row{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:20px}
+        .control-label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted)}
+        .sku-select{font-family:var(--font-body);font-size:14px;font-weight:500;padding:8px 36px 8px 14px;border:2px solid var(--border);border-radius:var(--radius-sm);background:var(--card) url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%236B6560' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;color:var(--text-primary);cursor:pointer;appearance:none;transition:var(--transition)}
+        .sku-select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light)}
+        .input-field{font-family:var(--font-body);font-size:14px;padding:8px 14px;border:2px solid var(--border);border-radius:var(--radius-sm);background:var(--card);color:var(--text-primary);width:120px;transition:var(--transition)}
+        .input-field:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light)}
+        .btn-primary{font-family:var(--font-body);font-size:13.5px;font-weight:600;padding:10px 24px;background:var(--accent);color:white;border:none;border-radius:var(--radius-pill);cursor:pointer;box-shadow:0 2px 8px var(--accent-glow);transition:var(--transition)}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 20px var(--accent-glow)}
+
+        .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin:20px 0}
+        .stat-box{background:var(--card-secondary);border-radius:var(--radius-md);padding:20px 22px;text-align:center;border:1px solid transparent;transition:var(--transition)}
+        .stat-box:hover{border-color:var(--border);background:var(--card);box-shadow:var(--shadow-sm);transform:translateY(-2px)}
+        .stat-number{font-family:var(--font-heading);font-size:36px;font-weight:700;letter-spacing:-1px}
+        .stat-label{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-top:4px}
+
+        .throttle-viz{display:flex;gap:0;margin:24px 0;border-radius:var(--radius-md);overflow:hidden;border:1px solid var(--border)}
+        .throttle-stage{padding:18px 16px;text-align:center;position:relative;transition:var(--transition)}
+        .throttle-stage:hover{filter:brightness(0.97)}
+        .throttle-stage:not(:last-child)::after{content:'';position:absolute;right:0;top:20%;height:60%;width:1px;background:rgba(255,255,255,0.3)}
+        .throttle-stage .stage-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;opacity:0.85}
+        .throttle-stage .stage-range{font-family:var(--font-code);font-size:13px;font-weight:500;margin-top:6px}
+        .throttle-stage .stage-effect{font-size:12px;margin-top:4px;opacity:0.8}
+        .throttle-safe{background:var(--green-bg);color:var(--green);flex:1.5}
+        .throttle-delay{background:#FFF7E6;color:#B8860B;flex:2}
+        .throttle-reject-int{background:var(--orange-bg);color:var(--orange);flex:3}
+        .throttle-reject-all{background:#FDE8E8;color:#C0392B;flex:2}
+
+        .canvas-container{background:var(--card-secondary);border-radius:var(--radius-md);padding:24px;margin:20px 0;border:1px solid var(--border);transition:var(--transition)}
+        .canvas-container:hover{border-color:var(--border-hover)}
+        .canvas-container canvas{width:100%;height:280px;display:block}
+
+        .callout{background:var(--accent-light);border:1px solid rgba(196,101,58,0.12);border-radius:var(--radius-md);padding:20px 24px;margin:20px 0;transition:var(--transition)}
+        .callout:hover{border-color:rgba(196,101,58,0.25);box-shadow:var(--shadow-xs)}
+        .callout-title{font-family:var(--font-heading);font-size:15px;font-weight:600;color:var(--accent);margin-bottom:6px}
+        .callout p{font-size:13.5px;color:var(--text-secondary)}
+        .callout-green{background:var(--green-bg);border-color:rgba(91,140,90,0.15)}
+        .callout-green:hover{border-color:rgba(91,140,90,0.3)}
+        .callout-green .callout-title{color:var(--green)}
+
+        .tco-result{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}
+        .tco-box{border-radius:var(--radius-md);padding:24px;text-align:center;transition:var(--transition)}
+        .tco-box:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+        .tco-box.option-a{background:var(--orange-bg);border:2px solid rgba(196,136,58,0.2)}
+        .tco-box.option-a:hover{border-color:rgba(196,136,58,0.4)}
+        .tco-box.option-b{background:var(--green-bg);border:2px solid rgba(91,140,90,0.2)}
+        .tco-box.option-b:hover{border-color:rgba(91,140,90,0.4)}
+        .tco-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted)}
+        .tco-amount{font-family:var(--font-heading);font-size:32px;font-weight:700;margin:8px 0 4px}
+        .tco-detail{font-size:12.5px;color:var(--text-secondary)}
+        .tco-winner{margin-top:16px;padding:14px 20px;border-radius:var(--radius-md);text-align:center;font-weight:600;font-size:14px;transition:var(--transition);border:1px solid transparent}
+        .tco-winner:hover{transform:translateY(-1px);box-shadow:var(--shadow-sm)}
+
+        .spark-diagram{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:20px 0}
+        .spark-mode{border-radius:var(--radius-md);padding:28px;border:2px solid var(--border);transition:var(--transition-slow);position:relative;overflow:hidden}
+        .spark-mode::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--accent-light),transparent);opacity:0;transition:var(--transition-slow)}
+        .spark-mode:hover{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light),var(--shadow-md);transform:translateY(-2px)}
+        .spark-mode:hover::before{opacity:1}
+        .spark-mode-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:8px;position:relative}
+        .spark-mode-title{font-family:var(--font-heading);font-size:18px;font-weight:600;margin-bottom:12px;position:relative}
+        .spark-mode ul{list-style:none;padding:0;position:relative}
+        .spark-mode li{font-size:13.5px;color:var(--text-secondary);padding:5px 0 5px 20px;position:relative}
+        .spark-mode li::before{content:'';position:absolute;left:0;top:12px;width:8px;height:8px;border-radius:50%}
+        .spark-capacity li::before{background:var(--accent)}
+        .spark-autoscale li::before{background:var(--green)}
+
+        .vcore-row{display:flex;align-items:center;margin-bottom:8px;gap:12px}
+        .vcore-sku{font-family:var(--font-code);font-size:13px;font-weight:500;width:55px;text-align:right;color:var(--text-secondary)}
+        .vcore-bar-track{flex:1;height:28px;background:var(--card-secondary);border-radius:var(--radius-sm);position:relative;overflow:hidden}
+        .vcore-bar-base{height:100%;background:var(--accent);border-radius:var(--radius-sm);position:absolute;left:0;top:0;transition:width 0.8s cubic-bezier(0.25,0.1,0.25,1);opacity:0.85}
+        .vcore-bar-burst{height:100%;background:repeating-linear-gradient(-45deg,rgba(196,101,58,0.25),rgba(196,101,58,0.25) 4px,rgba(196,101,58,0.1) 4px,rgba(196,101,58,0.1) 8px);border-radius:var(--radius-sm);position:absolute;left:0;top:0;transition:width 0.8s cubic-bezier(0.25,0.1,0.25,1) 0.15s}
+        .vcore-values{font-size:12px;font-weight:500;color:var(--text-secondary);width:120px}
+        .vcore-values span{color:var(--accent);font-weight:600}
+
+        /* Architecture Diagram */
+        .arch-diagram{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-md);padding:32px;margin:24px 0 32px;box-shadow:var(--shadow-sm);transition:var(--transition)}
+        .arch-diagram:hover{box-shadow:var(--shadow-md)}
+        .arch-diagram h3{font-family:var(--font-heading);font-size:18px;font-weight:600;margin-bottom:20px}
+        .arch-layers{display:flex;flex-direction:column;gap:6px}
+        .arch-layer{display:flex;align-items:center;gap:16px;padding:14px 20px;border-radius:var(--radius-sm);transition:var(--transition);cursor:default;border:1px solid transparent}
+        .arch-layer:hover{transform:translateX(6px);border-color:rgba(0,0,0,0.04);box-shadow:var(--shadow-xs)}
+        .arch-layer-badge{min-width:120px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:white;padding:5px 14px;border-radius:var(--radius-pill);text-align:center;transition:var(--transition)}
+        .arch-layer:hover .arch-layer-badge{box-shadow:0 2px 8px rgba(0,0,0,0.15)}
+        .arch-layer-content{flex:1;font-size:13.5px;color:var(--text-secondary)}
+        .arch-layer-content strong{color:var(--text-primary)}
+        .arch-layer-sections{margin-left:auto;display:flex;gap:6px;flex-shrink:0}
+        .arch-section-tag{font-size:10px;font-weight:600;padding:3px 10px;border-radius:var(--radius-pill);background:rgba(255,255,255,0.7);color:var(--text-secondary);transition:var(--transition)}
+        .arch-layer:hover .arch-section-tag{background:rgba(255,255,255,0.9)}
+        .al-azure{background:rgba(0,120,212,0.06)}.al-azure .arch-layer-badge{background:var(--layer-azure)}
+        .al-azure:hover{background:rgba(0,120,212,0.1)}
+        .al-capacity{background:rgba(196,101,58,0.05)}.al-capacity .arch-layer-badge{background:var(--layer-capacity)}
+        .al-capacity:hover{background:rgba(196,101,58,0.09)}
+        .al-workspace{background:rgba(91,140,90,0.05)}.al-workspace .arch-layer-badge{background:var(--layer-workspace)}
+        .al-workspace:hover{background:rgba(91,140,90,0.09)}
+        .al-items{background:rgba(124,107,177,0.05)}.al-items .arch-layer-badge{background:var(--layer-items)}
+        .al-items:hover{background:rgba(124,107,177,0.09)}
+        .al-users{background:rgba(196,136,58,0.05)}.al-users .arch-layer-badge{background:var(--layer-users)}
+        .al-users:hover{background:rgba(196,136,58,0.09)}
+
+        .source-ref{font-size:11.5px;color:var(--text-muted);margin-top:16px;padding-top:12px;border-top:1px solid var(--border)}
+        .source-ref a{color:var(--accent);text-decoration:none;transition:var(--transition)}
+        .source-ref a:hover{text-decoration:underline;color:#A85030}
+
+        .guardrail-highlight{background:linear-gradient(135deg,var(--accent-light),rgba(196,101,58,0.02));border:2px solid rgba(196,101,58,0.15)}
+        .guardrail-highlight:hover{border-color:rgba(196,101,58,0.3)}
+
+        .footer{max-width:1100px;margin:0 auto;padding:24px 32px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted)}
+
+        /* Evaluator Wizard */
+        @keyframes evalFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        .eval-container{background:var(--card);border:2px solid var(--border);border-radius:var(--radius-lg);padding:36px;box-shadow:var(--shadow-md);margin-bottom:24px;transition:var(--transition-slow)}
+        .eval-container:hover{box-shadow:var(--shadow-lg);border-color:var(--border-hover)}
+        .eval-progress{display:flex;gap:6px;margin-bottom:28px}
+        .eval-prog-seg{flex:1;display:flex;flex-direction:column;gap:4px}
+        .eval-prog-bar{height:5px;border-radius:3px;background:var(--card-secondary);transition:var(--transition-slow)}
+        .eval-prog-bar.done{background:var(--accent);box-shadow:0 1px 4px var(--accent-glow)}
+        .eval-prog-bar.active{background:var(--accent);opacity:0.5;animation:eval-pulse 1.8s ease-in-out infinite}
+        @keyframes eval-pulse{0%,100%{opacity:0.4}50%{opacity:1}}
+        .eval-prog-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);text-align:center;transition:var(--transition)}
+        .eval-prog-label.active{color:var(--accent)}
+        .eval-prog-label.done{color:var(--green)}
+        .eval-question-counter{font-size:12px;color:var(--text-muted);margin-bottom:8px;animation:evalFadeIn 0.3s ease}
+        .eval-question{font-family:var(--font-heading);font-size:20px;font-weight:600;margin-bottom:22px;line-height:1.35;letter-spacing:-0.2px;animation:evalFadeIn 0.3s ease 0.05s both}
+        .eval-options{display:flex;flex-direction:column;gap:10px;animation:evalFadeIn 0.35s ease 0.1s both}
+        .eval-opt{display:flex;align-items:center;gap:14px;padding:16px 22px;border:1.5px solid var(--border);border-radius:var(--radius-md);cursor:pointer;transition:var(--transition);font-size:14px;line-height:1.5;color:var(--text-secondary);background:var(--card);position:relative;overflow:hidden}
+        .eval-opt::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--accent-light),rgba(196,101,58,0.02));opacity:0;transition:var(--transition)}
+        .eval-opt:hover{border-color:var(--accent);color:var(--text-primary);transform:translateX(6px);box-shadow:var(--shadow-sm)}
+        .eval-opt:hover::before{opacity:1}
+        .eval-opt.selected{border-color:var(--accent);background:rgba(196,101,58,0.05);color:var(--text-primary);font-weight:600;box-shadow:0 0 0 3px var(--accent-light)}
+        .eval-opt.selected::before{opacity:1}
+        .eval-opt-radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:var(--transition);position:relative;z-index:1}
+        .eval-opt:hover .eval-opt-radio{border-color:var(--accent)}
+        .eval-opt.selected .eval-opt-radio{border-color:var(--accent);background:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+        .eval-opt.selected .eval-opt-radio::after{content:'';width:8px;height:8px;border-radius:50%;background:white}
+        .eval-opt > div:last-child{position:relative;z-index:1}
+        .eval-nav{display:flex;justify-content:space-between;align-items:center;margin-top:28px;padding-top:20px;border-top:1px solid var(--border)}
+        .eval-btn{font-family:var(--font-body);font-size:13.5px;font-weight:600;padding:11px 30px;border-radius:var(--radius-pill);cursor:pointer;transition:var(--transition);border:none}
+        .eval-btn-back{background:var(--card-secondary);color:var(--text-secondary);border:1.5px solid var(--border)}
+        .eval-btn-back:hover{background:var(--border);transform:translateY(-1px);box-shadow:var(--shadow-xs)}
+        .eval-btn-next{background:var(--accent);color:white;box-shadow:0 2px 10px var(--accent-glow)}
+        .eval-btn-next:hover{transform:translateY(-2px);box-shadow:0 6px 20px var(--accent-glow)}
+        .eval-btn-next:disabled{opacity:0.35;cursor:not-allowed;transform:none;box-shadow:none}
+        .eval-step-label{font-size:12.5px;color:var(--text-muted);font-variant-numeric:tabular-nums}
+        /* Evaluator Results */
+        .eval-result{text-align:center;padding:20px 0;animation:evalFadeIn 0.5s ease}
+        .eval-profile-badge{display:inline-block;padding:8px 28px;border-radius:var(--radius-pill);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
+        .eval-profile-name{font-family:var(--font-heading);font-size:30px;font-weight:700;letter-spacing:-0.5px;margin-bottom:10px}
+        .eval-profile-desc{font-size:15px;color:var(--text-secondary);max-width:640px;margin:0 auto 28px;line-height:1.65}
+        .eval-radar-wrap{display:flex;justify-content:center;margin:24px 0}
+        .eval-radar-wrap canvas{max-width:320px;max-height:320px}
+        .eval-recs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:28px 0;text-align:left}
+        .eval-rec-card{background:var(--card-secondary);border-radius:var(--radius-md);padding:22px 26px;border:1px solid transparent;transition:var(--transition)}
+        .eval-rec-card:hover{border-color:var(--border);background:var(--card);box-shadow:var(--shadow-sm);transform:translateY(-2px)}
+        .eval-rec-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px}
+        .eval-rec-value{font-family:var(--font-heading);font-size:16px;font-weight:600}
+        .eval-rec-value a{color:var(--accent);text-decoration:none}
+        .eval-rec-value a:hover{text-decoration:underline}
+        .eval-section-links{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:20px}
+        .eval-section-link{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;background:var(--accent);color:white;border-radius:var(--radius-pill);font-size:13px;font-weight:600;text-decoration:none;transition:var(--transition);box-shadow:0 2px 6px var(--accent-glow)}
+        .eval-section-link:hover{transform:translateY(-2px);box-shadow:0 6px 20px var(--accent-glow)}
+        .eval-scores-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0}
+        .eval-score-item{text-align:center;padding:18px 14px;background:var(--card-secondary);border-radius:var(--radius-md);border:1px solid transparent;transition:var(--transition)}
+        .eval-score-item:hover{border-color:var(--border);background:var(--card);box-shadow:var(--shadow-sm);transform:translateY(-2px)}
+        .eval-score-item .score-val{font-family:var(--font-heading);font-size:30px;font-weight:700;color:var(--accent)}
+        .eval-score-item .score-lab{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-top:4px}
+        /* Section Panel Tabs */
+        .section-panel{display:none;animation:panelFadeIn 0.35s ease}
+        .section-panel.active{display:block}
+        .container.view-all .section-panel{display:block !important;animation:none}
+        .container.view-all .section-panel+.section-panel{margin-top:8px;padding-top:8px}
+        @keyframes panelFadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        .nav-btn-viewall{background:var(--dark) !important;color:white !important;border-color:var(--dark) !important}
+        .nav-btn-viewall:hover{opacity:0.85;transform:translateY(-2px);box-shadow:var(--shadow-md) !important}
+        .nav-btn-viewall.active{background:var(--green) !important;border-color:var(--green) !important;box-shadow:0 0 0 3px var(--green-glow) !important}
+        /* Sticky nav in tab mode */
+        .nav-row{position:sticky;top:0;z-index:50;background:var(--bg);padding-top:12px;padding-bottom:12px;border-bottom:1px solid var(--border);margin-left:-32px;margin-right:-32px;padding-left:32px;padding-right:32px}
+        /* FAQ Accordion */
+        .faq-list{display:flex;flex-direction:column;gap:2px}
+        .faq-item{border-bottom:1px solid var(--border)}
+        .faq-item:last-child{border-bottom:none}
+        .faq-q{display:flex;align-items:center;justify-content:space-between;width:100%;padding:16px 4px;background:none;border:none;cursor:pointer;font-family:var(--font-body);font-size:14.5px;font-weight:600;color:var(--text-primary);text-align:left;line-height:1.45;gap:16px;transition:var(--transition);border-radius:var(--radius-sm)}
+        .faq-q:hover{color:var(--accent);background:var(--accent-light);padding-left:12px;padding-right:12px}
+        .faq-q.open{color:var(--accent)}
+        .faq-chevron{font-size:12px;color:var(--text-muted);transition:transform 0.3s ease;flex-shrink:0}
+        .faq-q.open .faq-chevron{transform:rotate(180deg);color:var(--accent)}
+        .faq-a{max-height:0;overflow:hidden;transition:max-height 0.4s cubic-bezier(0.4,0,0.2,1),padding 0.3s ease,opacity 0.3s ease;opacity:0;padding:0 4px}
+        .faq-a.open{max-height:600px;opacity:1;padding:4px 12px 20px}
+        .faq-a p{font-size:13.5px;color:var(--text-secondary);line-height:1.7}
+        .faq-a p strong{color:var(--text-primary)}
+        .faq-a .faq-source{display:block;margin-top:10px;font-size:12px;color:var(--text-muted);line-height:1.5}
+        .faq-a .faq-source a{color:var(--accent);text-decoration:none;font-weight:500}
+        .faq-a .faq-source a:hover{text-decoration:underline}
+        /* Journey Breadcrumb Bar */
+        .journey-bar{display:none;margin-bottom:20px;animation:panelFadeIn 0.4s ease}
+        .journey-bar.visible{display:block}
+        .journey-inner{display:flex;align-items:center;gap:14px;padding:12px 20px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);flex-wrap:wrap}
+        .journey-profile,.journey-rec{display:flex;align-items:center;gap:8px}
+        .journey-profile-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+        .journey-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted)}
+        .journey-profile-name{font-family:var(--font-heading);font-size:14px;font-weight:600;color:var(--text-primary)}
+        .journey-rec-value{font-family:var(--font-code);font-size:13px;font-weight:600;color:var(--accent);background:var(--accent-light);padding:2px 10px;border-radius:var(--radius-pill)}
+        .journey-sep{color:var(--text-muted);font-size:14px;flex-shrink:0}
+        .journey-sections{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+        .journey-sec-pill{font-size:11px;font-weight:600;padding:4px 12px;border-radius:var(--radius-pill);cursor:pointer;transition:var(--transition);text-decoration:none;border:1.5px solid var(--border);color:var(--text-secondary);background:var(--card)}
+        .journey-sec-pill:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);transform:translateY(-1px)}
+        .journey-sec-pill.current{border-color:var(--accent);color:var(--accent);background:var(--accent-light);font-weight:700}
+        .journey-actions{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
+        .journey-retake{font-family:var(--font-body);font-size:11px;font-weight:600;color:var(--text-muted);background:none;border:1px solid var(--border);border-radius:var(--radius-pill);padding:4px 12px;cursor:pointer;transition:var(--transition)}
+        .journey-retake:hover{border-color:var(--accent);color:var(--accent)}
+        .journey-dismiss{font-family:var(--font-body);font-size:16px;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:4px;transition:var(--transition);line-height:1}
+        .journey-dismiss:hover{background:var(--card-secondary);color:var(--text-primary)}
+        @media(max-width:768px){
+            .journey-inner{gap:8px;padding:10px 14px}
+            .journey-sep{display:none}
+            .journey-profile,.journey-rec{flex:1 1 100%}
+            .journey-sections{flex:1 1 100%}
+        }
+        /* Sliders */
+        .slider-group{margin-bottom:20px}
+        .slider-row{display:flex;align-items:center;gap:16px;margin-bottom:14px}
+        .slider-label{min-width:180px;font-size:13px;font-weight:500;color:var(--text-primary)}
+        .slider-label small{display:block;font-size:11px;font-weight:400;color:var(--text-muted);margin-top:1px}
+        .slider-track{flex:1;position:relative}
+        .slider-track input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;background:var(--border);outline:none;transition:var(--transition)}
+        .slider-track input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;border:3px solid var(--card);box-shadow:0 1px 4px var(--accent-glow);transition:var(--transition)}
+        .slider-track input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);box-shadow:0 2px 8px var(--accent-glow)}
+        .slider-track input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;border:3px solid var(--card);box-shadow:0 1px 4px var(--accent-glow)}
+        .slider-track input[type=range]:focus{background:linear-gradient(to right,var(--accent) 0%,var(--border) 0%)}
+        .slider-value{min-width:80px;text-align:right;font-family:var(--font-code);font-size:14px;font-weight:600;color:var(--accent);background:var(--card-secondary);padding:6px 12px;border-radius:var(--radius-sm)}
+        .tco-why{background:var(--card);border:2px solid var(--border);border-radius:var(--radius-md);padding:24px 28px;margin-bottom:24px}
+        .tco-why-title{font-family:var(--font-heading);font-size:17px;font-weight:600;margin-bottom:10px;color:var(--text-primary)}
+        .tco-why p{font-size:13.5px;color:var(--text-secondary);line-height:1.6}
+        .tco-why p+p{margin-top:8px}
+        .tco-breakdown{background:var(--card-secondary);border-radius:var(--radius-md);padding:20px 24px;margin-top:20px}
+        .tco-breakdown-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:12px}
+        .tco-line{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13.5px}
+        .tco-line:last-child{border-bottom:none;font-weight:700;padding-top:12px;margin-top:4px;border-top:2px solid var(--border)}
+        .tco-line-label{color:var(--text-secondary)}
+        .tco-line-value{font-family:var(--font-code);font-weight:600}
+
+        @media(max-width:768px){
+            .container{padding:0 20px 40px}.brand-header{padding:20px}.hero h1{font-size:28px}
+            .roadmap,.tco-result,.spark-diagram{grid-template-columns:1fr}
+            .stat-grid{grid-template-columns:repeat(2,1fr)}.throttle-viz{flex-direction:column}
+            .nav-row{gap:6px;margin-left:-20px;margin-right:-20px;padding-left:20px;padding-right:20px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+            .nav-btn{flex:0 0 auto;font-size:12px;padding:8px 14px;white-space:nowrap}
+            .card{padding:24px}.arch-layer{flex-wrap:wrap}.arch-layer-sections{margin-left:0;margin-top:6px}
+            .slider-row{flex-wrap:wrap;gap:8px}.slider-label{min-width:100%;margin-bottom:-4px}.slider-value{min-width:60px}
+            .eval-container{padding:24px}.eval-question{font-size:17px}.eval-recs{grid-template-columns:1fr}.eval-scores-grid{grid-template-columns:repeat(2,1fr)}
+            .layer-indicator{flex-direction:column;gap:12px}
+            .layer-diagram{min-width:100%;flex-direction:row}.layer-bar{width:100%;height:6px!important}.layer-bar.active{height:10px!important}
+            .term .term-tip{width:220px}
+        }
+        @media print{.nav-row,.control-row,.btn-primary,.roadmap{display:none}.card{break-inside:avoid;box-shadow:none;border:1px solid #ddd}}
+    </style>
+</head>
+<body>
+
+<header class="brand-header">
+        <div class="brand-logo" style="background:transparent;width:44px;height:44px"><img src="data:image/png;base64,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" width="44" height="44" alt="Microsoft Fabric" style="display:block"></div>
+    <div class="brand-info">
+        <span class="brand-label">MICROSOFT FABRIC</span>
+        <span class="brand-author">Content Author: By Shrikesh Pattni | Lead Architect</span>
+        <span class="brand-author" style="color:var(--accent);font-weight:500">Fabric Capacity Architecture Accelerator</span>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- HERO -->
+    <div class="hero">
+        <h1>Fabric Capacity Architecture Accelerator</h1>
+        <p class="subtitle">Beyond the SKU table &mdash; understanding the compute model, licensing architecture, and Spark execution dynamics that drive real-world Fabric capacity decisions.</p>
+    </div>
+
+    <!-- START HERE -->
+    <div class="intro-card">
+        <p><strong>New to Fabric?</strong> Microsoft Fabric is a unified analytics platform where all your data workloads &mdash; data engineering, warehousing, data science, real-time analytics, and Power BI &mdash; run on a shared pool of compute called <strong>Capacity Units (CUs)</strong>. Think of it like a shared electricity meter for a building: every tenant (workload) uses the same power supply, but the meter is smart enough to spread out peak usage so nobody trips the fuse. That &ldquo;smart spreading&rdquo; is called <em>smoothing</em>, and it&rsquo;s the single most important concept in understanding how Fabric capacity works.</p>
+        <p>This guide goes deeper than the typical SKU comparison table. It explains the <strong>runtime mechanics</strong> &mdash; how your workloads actually consume compute, when throttling kicks in, why the F64 SKU is an architectural boundary (not just &ldquo;more power&rdquo;), and how Spark execution works differently from everything else. Every claim is validated against official Microsoft documentation.</p>
+    </div>
+
+    <!-- READING ROADMAP -->
+    <div class="roadmap">
+        <a href="#architecture" class="roadmap-card">
+            <div class="roadmap-persona">Everyone</div>
+            <div class="roadmap-title">Start here &mdash; Big Picture</div>
+            <div class="roadmap-desc">Understand where capacity, workspaces, and workloads fit within the Fabric architecture before diving into details.</div>
+            <div class="roadmap-sections"><span>Architecture</span></div>
+        </a>
+        <a href="#f64-decision" class="roadmap-card">
+            <div class="roadmap-persona">Evaluating Fabric or planning budget</div>
+            <div class="roadmap-title">The F64 Decision</div>
+            <div class="roadmap-desc">If you&rsquo;re deciding what SKU to buy, start here. The F64 boundary changes your licensing costs and capabilities significantly.</div>
+            <div class="roadmap-sections"><span>2 F64</span> <span>5 SKU Ref</span></div>
+        </a>
+        <a href="#cu-economy" class="roadmap-card">
+            <div class="roadmap-persona">Already on Fabric &mdash; optimising</div>
+            <div class="roadmap-title">The CU Economy</div>
+            <div class="roadmap-desc">If you&rsquo;re already running workloads and want to understand throttling, smoothing, or workload contention, start here.</div>
+            <div class="roadmap-sections"><span>1 CU Model</span> <span>3 Spark</span> <span>4 Workloads</span></div>
+        </a>
+    </div>
+
+    <!-- NAV TABS -->
+    <nav class="nav-row" id="navTabs">
+        <button class="nav-btn active" data-target="evaluator" onclick="switchTab('evaluator',this)">&#127795; Fabric Evaluator</button>
+        <button class="nav-btn" data-target="architecture" onclick="switchTab('architecture',this)">&#127963;&#65039; Architecture Overview</button>
+        <button class="nav-btn" data-target="cu-economy" onclick="switchTab('cu-economy',this)">&#9889; CU Economy Model</button>
+        <button class="nav-btn" data-target="f64-decision" onclick="switchTab('f64-decision',this)">&#127959;&#65039; F64 Decision Architecture</button>
+        <button class="nav-btn" data-target="spark-burst" onclick="switchTab('spark-burst',this)">&#128293; Spark Burst &amp; Autoscale</button>
+        <button class="nav-btn" data-target="cross-workload" onclick="switchTab('cross-workload',this)">&#128202; Cross-Workload CU Map</button>
+        <button class="nav-btn" data-target="sku-reference" onclick="switchTab('sku-reference',this)">&#128203; SKU Quick Reference</button>
+        <button class="nav-btn" data-target="faq" onclick="switchTab('faq',this)">&#10067; FAQ</button>
+        <button class="nav-btn nav-btn-viewall" onclick="toggleViewAll(this)">&#128196; View All</button>
+    </nav>
+
+    <!-- JOURNEY BREADCRUMB (hidden until evaluator complete) -->
+    <div class="journey-bar" id="journeyBar">
+        <div class="journey-inner">
+            <div class="journey-profile">
+                <div class="journey-profile-dot" id="journeyDot"></div>
+                <span class="journey-label">Your Profile</span>
+                <span class="journey-profile-name" id="journeyName"></span>
+            </div>
+            <div class="journey-sep">&#8594;</div>
+            <div class="journey-rec">
+                <span class="journey-label">Recommended</span>
+                <span class="journey-rec-value" id="journeyRec"></span>
+            </div>
+            <div class="journey-sep">&#8594;</div>
+            <div class="journey-sections" id="journeySections"></div>
+            <div class="journey-actions">
+                <button class="journey-retake" onclick="evalReset();switchTab('evaluator',document.querySelector('.nav-btn[data-target=evaluator]'))">Retake</button>
+                <button class="journey-dismiss" onclick="dismissJourney()" title="Dismiss">&times;</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SECTION 0: FABRIC EVALUATOR DECISION TREE -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section-panel active" data-section="evaluator">
+    <div id="evaluator" class="section-anchor"></div>
+    <div class="section-header">
+        <div class="section-number" style="background:var(--green)">0</div>
+        <div class="section-title-group">
+            <div class="section-title">Fabric Evaluator Decision Tree</div>
+            <div class="section-subtitle">20 questions across 4 segments &mdash; discover your Fabric Profile before diving into capacity architecture</div>
+        </div>
+    </div>
+
+    <div class="why-care">
+        <div class="why-care-icon">&#127795;</div>
+        <div class="why-care-text">Not everyone needs Fabric. Some organisations are perfectly served by Power BI Pro. Others need the full unified platform. This evaluator assesses your data landscape, analytics maturity, scale, and governance requirements to produce a <strong>Fabric Profile</strong> &mdash; telling you exactly which path fits and which sections of this accelerator matter most to you.</div>
+    </div>
+
+    <div class="eval-container" id="evalWizard">
+        <!-- Progress -->
+        <div class="eval-progress" id="evalProgress"></div>
+        <!-- Question area -->
+        <div id="evalBody"></div>
+    </div>
+    </div><!-- /section-panel evaluator -->
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SECTION 1: ARCHITECTURE OVERVIEW          -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section-panel" data-section="architecture">
+    <div id="architecture" class="section-anchor"></div>
+    <div class="section-header">
+        <div class="section-number" style="background:var(--layer-azure)">1</div>
+        <div class="section-title-group">
+            <div class="section-title">How Fabric Fits Together</div>
+            <div class="section-subtitle">The five layers of Fabric architecture &mdash; and where each section of this guide zooms in</div>
+        </div>
+    </div>
+
+    <div class="arch-diagram">
+        <h3>Fabric Architecture &mdash; Layered View</h3>
+        <div class="arch-layers">
+            <div class="arch-layer al-azure">
+                <div class="arch-layer-badge">Azure</div>
+                <div class="arch-layer-content"><strong>Azure Subscription</strong> &mdash; your billing boundary. Fabric capacities are Azure resources provisioned inside a subscription and tied to a region.</div>
+                <div class="arch-layer-sections"><span class="arch-section-tag">6 SKU Ref</span></div>
+            </div>
+            <div class="arch-layer al-capacity">
+                <div class="arch-layer-badge">Capacity</div>
+                <div class="arch-layer-content"><strong>Fabric Capacity (F-SKU)</strong> &mdash; the shared compute pool. All workloads draw from this pool measured in CUs. Smoothing, bursting, and throttling operate here.</div>
+                <div class="arch-layer-sections"><span class="arch-section-tag">2 CU Economy</span> <span class="arch-section-tag">3 F64</span></div>
+            </div>
+            <div class="arch-layer al-workspace">
+                <div class="arch-layer-badge">Workspace</div>
+                <div class="arch-layer-content"><strong>Workspaces</strong> &mdash; logical containers assigned to a capacity. Think of them as project folders. Each workspace lives on exactly one capacity.</div>
+                <div class="arch-layer-sections"><span class="arch-section-tag">5 Workloads</span></div>
+            </div>
+            <div class="arch-layer al-items">
+                <div class="arch-layer-badge">Items</div>
+                <div class="arch-layer-content"><strong>Fabric Items</strong> &mdash; Lakehouses, Warehouses, Notebooks, Pipelines, Semantic Models, Reports. Each item type consumes CUs differently.</div>
+                <div class="arch-layer-sections"><span class="arch-section-tag">4 Spark</span> <span class="arch-section-tag">5 Workloads</span></div>
+            </div>
+            <div class="arch-layer al-users">
+                <div class="arch-layer-badge">Users</div>
+                <div class="arch-layer-content"><strong>Users &amp; Licensing</strong> &mdash; who can access what. The F64 boundary determines whether viewers need paid Pro licences or can use free Fabric licences.</div>
+                <div class="arch-layer-sections"><span class="arch-section-tag">3 F64</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="callout" style="margin-bottom:40px">
+        <div class="callout-title">The Key Mental Model</div>
+        <p>Everything flows downward: <strong>Azure &rarr; Capacity &rarr; Workspace &rarr; Items &rarr; Users</strong>. Your SKU size sets the total compute budget at the Capacity layer. Workspaces divide that budget among teams. Items consume the budget at different rates. Users are either charged individually (Pro licence) or covered by the capacity (F64+). The rest of this guide zooms into each layer.</p>
+    </div>
+    </div><!-- /section-panel architecture -->
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SECTION 2: CU ECONOMY MODEL               -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section-panel" data-section="cu-economy">
+    <div id="cu-economy" class="section-anchor"></div>
+    <div class="section-header">
+        <div class="section-number">2</div>
+        <div class="section-title-group">
+            <div class="section-title">The CU Economy Model</div>
+            <div class="section-subtitle">How Fabric&rsquo;s time-based compute economy actually works under the hood</div>
+        </div>
+    </div>
+
+    <div class="layer-indicator">
+        <div class="layer-diagram">
+            <div class="layer-bar l-azure"></div>
+            <div class="layer-bar l-capacity active"></div>
+            <div class="layer-bar l-workspace"></div>
+            <div class="layer-bar l-items"></div>
+            <div class="layer-bar l-users"></div>
+        </div>
+        <div class="layer-text">
+            <div class="layer-label" style="color:var(--layer-capacity)">Zooming into: Capacity Layer</div>
+            <div class="layer-explain">This section explains the compute mechanics at the Capacity layer &mdash; how CUs are measured, distributed over time (smoothing), and what happens when demand exceeds supply (throttling).</div>
+        </div>
+    </div>
+
+    <div class="why-care">
+        <div class="why-care-icon">&#128161;</div>
+        <div class="why-care-text">This determines whether your reports load instantly or your users see error messages during peak hours. Understanding smoothing and throttling is the difference between right-sizing your capacity and either overpaying or getting throttled.</div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">The Time-Based Economy</div>
+        <div class="card-desc">Fabric capacity isn&rsquo;t a fixed pool of compute you &ldquo;use up&rdquo; &mdash; it&rsquo;s a time-based budget that refreshes every 30 seconds.</div>
+        <p style="font-size:14px;color:var(--text-secondary);margin-bottom:20px">Every operation in Fabric consumes <span class="term">CU-seconds<span class="term-tip"><strong>CU-seconds:</strong> The fundamental billing unit. If an operation uses 4 CUs for 10 seconds, it consumed 40 CU-seconds. Think of it like kilowatt-hours on an electricity bill.</span></span>. The platform checks consumption every 30 seconds &mdash; each check is called a <span class="term">timepoint<span class="term-tip"><strong>Timepoint:</strong> A 30-second evaluation window. Fabric measures your consumption at each timepoint and compares it against your SKU&rsquo;s budget. There are 2,880 timepoints in 24 hours.</span></span>. Rather than charging peak usage immediately, Fabric <span class="term">smooths<span class="term-tip"><strong>Smoothing:</strong> Spreading a spike in compute usage across future timepoints so it doesn&rsquo;t hit your capacity budget all at once. Interactive operations smooth over 5&ndash;64 minutes; background operations smooth over 24 hours.</span></span> the cost over future timepoints &mdash; so a heavy operation doesn&rsquo;t immediately exhaust your capacity.</p>
+
+        <div class="stat-grid">
+            <div class="stat-box"><div class="stat-number">30s</div><div class="stat-label">Timepoint Length</div></div>
+            <div class="stat-box"><div class="stat-number">2,880</div><div class="stat-label">Timepoints / 24hrs</div></div>
+            <div class="stat-box"><div class="stat-number">5&ndash;64m</div><div class="stat-label">Interactive Smoothing</div></div>
+            <div class="stat-box"><div class="stat-number">24h</div><div class="stat-label">Background Smoothing</div></div>
+        </div>
+
+        <p style="font-size:13.5px;color:var(--text-secondary);margin-top:16px"><span class="term">Interactive operations<span class="term-tip"><strong>Interactive:</strong> Things triggered by a user waiting for a result &mdash; loading a Power BI report, running a query in the SQL editor. Smoothed over 5&ndash;64 minutes.</span></span> (report rendering, ad-hoc queries) smooth over 5&ndash;64 minutes. <span class="term">Background operations<span class="term-tip"><strong>Background:</strong> Scheduled or long-running tasks &mdash; dataset refreshes, Spark notebook runs, Dataflow Gen2 runs. Smoothed over 24 hours.</span></span> (refreshes, ETL, Spark jobs) smooth over the full 24-hour window.</p>
+        <div class="source-ref">Source: <a href="https://learn.microsoft.com/fabric/enterprise/throttling" target="_blank">The Fabric Throttling Policy</a> &mdash; Microsoft Learn</div>
+    </div>
+
+    <!-- Smoothing Simulator -->
+    <div class="card">
+        <div class="card-title">Smoothing Simulator</div>
+        <div class="card-desc">See how a single operation&rsquo;s CU cost gets distributed across timepoints. Change the SKU, job size, and type to see the effect.</div>
+        <div class="control-row">
+            <span class="control-label">SKU</span>
+            <select id="smoothSku" class="sku-select" onchange="updateSmoothing()">
+                <option value="2">F2 (2 CU)</option><option value="4">F4 (4 CU)</option><option value="8">F8 (8 CU)</option>
+                <option value="16">F16 (16 CU)</option><option value="32">F32 (32 CU)</option>
+                <option value="64" selected>F64 (64 CU)</option><option value="128">F128 (128 CU)</option><option value="256">F256 (256 CU)</option>
+            </select>
+            <span class="control-label">Job CU-Hours</span>
+            <input type="number" id="smoothJob" class="input-field" value="1" min="0.1" max="100" step="0.1" onchange="updateSmoothing()">
+            <span class="control-label">Type</span>
+            <select id="smoothType" class="sku-select" onchange="updateSmoothing()">
+                <option value="background" selected>Background (24h smoothing)</option>
+                <option value="interactive">Interactive (5&ndash;64 min smoothing)</option>
+            </select>
+        </div>
+        <div class="canvas-container"><canvas id="smoothingCanvas"></canvas></div>
+        <div id="smoothingStats" class="stat-grid" style="grid-template-columns:repeat(4,1fr)"></div>
+        <div class="source-ref">Source: <a href="https://learn.microsoft.com/fabric/enterprise/throttling#balance-between-performance-and-reliability" target="_blank">Smoothing and Throttling</a> &mdash; Microsoft Learn</div>
+    </div>
+
+    <!-- Throttling -->
+    <div class="card">
+        <div class="card-title">Progressive Throttling Stages</div>
+        <div class="card-desc">When smoothed CU usage exceeds available future capacity, Fabric throttles progressively &mdash; not instantly.</div>
+        <div class="throttle-viz">
+            <div class="throttle-stage throttle-safe"><div class="stage-label">Overage Protection</div><div class="stage-range">&le; 10 min</div><div class="stage-effect">No throttling. Jobs consume future capacity freely.</div></div>
+            <div class="throttle-stage throttle-delay"><div class="stage-label">Interactive Delay</div><div class="stage-range">10&ndash;60 min</div><div class="stage-effect">Interactive jobs delayed 20 seconds at submission.</div></div>
+            <div class="throttle-stage throttle-reject-int"><div class="stage-label">Interactive Rejection</div><div class="stage-range">60 min&ndash;24 hrs</div><div class="stage-effect">Interactive jobs rejected. Background jobs still run.</div></div>
+            <div class="throttle-stage throttle-reject-all"><div class="stage-label">Background Rejection</div><div class="stage-range">&gt; 24 hrs</div><div class="stage-effect">All requests rejected until CUs are paid off.</div></div>
+        </div>
+        <div class="callout">
+            <div class="callout-title">Key Insight</div>
+            <p><span class="term">Overage protection<span class="term-tip"><strong>Overage protection:</strong> A 10-minute buffer where your capacity can exceed its limit without penalty. It borrows from future timepoints. Only when this buffer is fully consumed does throttling begin.</span></span> means your capacity won&rsquo;t throttle until you&rsquo;ve consumed <strong>all CU resources allocated for the next 10 minutes</strong>. This is forward-looking &mdash; borrowing from future capacity. Smoothing doesn&rsquo;t slow down your operations; it just spreads the accounting.</p>
+        </div>
+        <div class="source-ref">Source: <a href="https://learn.microsoft.com/fabric/enterprise/throttling#throttle-triggers-and-throttle-stages" target="_blank">Throttle Triggers and Stages</a> &mdash; Microsoft Learn</div>
+    </div>
+
+    </div><!-- /section-panel cu-economy -->
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SECTION 3: F64 DECISION                   -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section-panel" data-section="f64-decision">
+    <div id="f64-decision" class="section-anchor"></div>
+    <div class="section-header">
+        <div class="section-number">3</div>
+        <div class="section-title-group">
+            <div class="section-title">The F64 Decision Architecture</div>
+            <div class="section-subtitle">F64 isn&rsquo;t just &ldquo;more CUs&rdquo; &mdash; it&rsquo;s an architectural boundary that changes your licensing economics</div>
+        </div>
+    </div>
+
+    <div class="layer-indicator">
+        <div class="layer-diagram">
+            <div class="layer-bar l-azure"></div>
+            <div class="layer-bar l-capacity active"></div>
+            <div class="layer-bar l-workspace"></div>
+            <div class="layer-bar l-items active"></div>
+            <div class="layer-bar l-users active"></div>
+        </div>
+        <div class="layer-text">
+            <div class="layer-label" style="color:var(--layer-capacity)">Zooming into: Capacity + Items + Users Layers</div>
+            <div class="layer-explain">The F64 boundary spans multiple layers. It changes capacity capabilities, item guardrails (Direct Lake), and user licensing (free viewers vs paid Pro).</div>
+        </div>
+    </div>
+
+    <div class="why-care">
+        <div class="why-care-icon">&#128161;</div>
+        <div class="why-care-text">This is the single biggest cost decision in Fabric. For organisations with 100+ Power BI viewers, jumping from F32 to F64 can actually <em>reduce</em> total monthly cost by eliminating viewer licence fees &mdash; while simultaneously unlocking better capabilities.</div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">What Unlocks at F64</div>
+        <div class="card-desc">F64 is equivalent to the old P1 Premium capacity. Crossing this threshold changes licensing, capabilities, and total cost of ownership.</div>
+        <table class="data-table">
+            <thead><tr><th>Capability</th><th>Below F64</th><th>F64 and Above</th><th>Impact</th></tr></thead>
+            <tbody>
+                <tr><td><strong>Power BI Viewer Licensing</strong></td><td>Every viewer needs <span class="term">Pro or PPU<span class="term-tip"><strong>Pro:</strong> ~$10/user/month. <strong>PPU:</strong> ~$20/user/month for Premium features without buying a capacity. Both are per-user costs.</span></span> licence (~$10/user/month)</td><td>Free-licensed users with viewer role can access content</td><td><span class="badge badge-high">High</span></td></tr>
+                <tr><td><strong>Copilot Access</strong></td><td>Requires a separate <span class="term">Fabric Copilot Capacity<span class="term-tip"><strong>Fabric Copilot Capacity:</strong> A dedicated capacity (min F2) that handles Copilot billing for users on smaller SKUs.</span></span> (min F2)</td><td>Copilot available natively on the capacity</td><td><span class="badge badge-mid">Mid</span></td></tr>
+                <tr><td><strong><span class="term">Direct Lake<span class="term-tip"><strong>Direct Lake:</strong> A storage mode for Power BI semantic models that reads directly from Delta/Parquet files in OneLake &mdash; no import needed. Combines Import speed with DirectQuery freshness. Guardrails vary by SKU.</span></span> &mdash; Parquet Files/Table</strong></td><td>1,000 files per table</td><td>5,000 files per table</td><td><span class="badge badge-high">High</span></td></tr>
+                <tr><td><strong>Direct Lake &mdash; Max Model Size</strong></td><td>10 GB (F2&ndash;F8), 20 GB (F16), 40 GB (F32)</td><td>Unlimited on disk/OneLake</td><td><span class="badge badge-high">High</span></td></tr>
+                <tr><td><strong>Direct Lake &mdash; Max Memory</strong></td><td>3 GB (F2&ndash;F8), 5 GB (F16), 10 GB (F32)</td><td>25 GB (F64), 50 GB (F128), 100 GB (F256)</td><td><span class="badge badge-mid">Mid</span></td></tr>
+                <tr><td><strong>Direct Lake &mdash; Rows per Table</strong></td><td>300 million</td><td>1.5 billion (F64), scaling to 24 billion (F1024+)</td><td><span class="badge badge-mid">Mid</span></td></tr>
+                <tr><td><strong>P-SKU Equivalence</strong></td><td>No P-SKU equivalent below F64</td><td>F64=P1, F128=P2, F256=P3, F512=P4, F1024=P5</td><td><span class="badge badge-low">Low</span></td></tr>
+            </tbody>
+        </table>
+        <div class="source-ref">Sources: <a href="https://learn.microsoft.com/fabric/enterprise/licenses" target="_blank">Fabric Licenses</a>, <a href="https://learn.microsoft.com/fabric/fundamentals/direct-lake-overview#fabric-capacity-requirements" target="_blank">Direct Lake Requirements</a>, <a href="https://learn.microsoft.com/fabric/enterprise/fabric-copilot-capacity" target="_blank">Fabric Copilot Capacity</a> &mdash; Microsoft Learn</div>
+    </div>
+
+    <!-- TCO Calculator -->
+    <!-- Why this calculator exists -->
+    <div class="tco-why">
+        <div class="tco-why-title">Why We Built This Calculator</div>
+        <p>The F64 SKU creates a <strong>licensing cliff</strong> that most Fabric guidance overlooks. Below F64, every Power BI viewer needs a paid Pro licence (~$10/user/month) or PPU licence (~$20/user/month). At F64 and above, viewers with a free Fabric licence can access content &mdash; no per-user cost. For organisations with hundreds of viewers, the Pro licence bill alone can exceed the cost difference between an F32 and an F64.</p>
+        <p>But the comparison isn&rsquo;t just &ldquo;SKU cost vs licence cost.&rdquo; You also need to factor in <strong>capacity runtime hours</strong> (F-SKUs can pause/resume &mdash; you might not need 24/7), <strong>commitment discounts</strong> (1-year reservations save ~25&ndash;40%), <strong>OneLake storage</strong> (billed separately per GB), and the fact that <strong>report creators still need Pro licences</strong> even on F64. This calculator models all of those variables so you can see the full picture.</p>
+    </div>
+
+    <!-- Methodology & Trust -->
+    <div class="card" id="tco-methodology">
+        <div class="card-title" style="cursor:pointer;display:flex;align-items:center;gap:10px" onclick="document.getElementById('methodology-body').style.display=document.getElementById('methodology-body').style.display==='none'?'block':'none';this.querySelector('.meth-chevron').textContent=document.getElementById('methodology-body').style.display==='none'?'\u25B6':'\u25BC'">
+            <span class="meth-chevron" style="font-size:14px;color:var(--accent)">&blacktriangledown;</span>
+            How This Calculator Works &mdash; Methodology &amp; Sources
+        </div>
+        <div class="card-desc">Transparency into every assumption. Expand to see exactly how each line item is calculated and the Microsoft source that validates it.</div>
+        <div id="methodology-body">
+            <table class="data-table" style="margin-top:12px">
+                <thead><tr><th style="width:22%">Line Item</th><th style="width:38%">How We Calculate It</th><th style="width:22%">Assumption</th><th style="width:18%">Microsoft Source</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Capacity Cost</strong></td>
+                        <td><code>CUs &times; $/CU/hr &times; hours/day &times; 30.44 days &times; (1 &minus; discount%)</code></td>
+                        <td>30.44 avg days/month. PAYG rate per region. Discount applies to reservations only.</td>
+                        <td><a href="https://azure.microsoft.com/en-us/pricing/details/microsoft-fabric/" target="_blank" style="color:var(--accent)">Fabric Pricing</a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Viewer Licences</strong></td>
+                        <td><code>viewers &times; $/user/month</code> for Option A. <strong>$0</strong> for Option B (F64+).</td>
+                        <td>Pro = ~$10/user/mo, PPU = ~$20/user/mo. On F64+, viewers with free Fabric licence need no per-user licence.</td>
+                        <td><a href="https://learn.microsoft.com/fabric/enterprise/licenses#per-user-or-individual-licenses" target="_blank" style="color:var(--accent)">Per-User Licences</a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Creator Licences</strong></td>
+                        <td><code>creators &times; $/user/month</code> &mdash; applies to <strong>both</strong> options.</td>
+                        <td>Even on F64+, report builders/developers need Pro. This cost doesn&rsquo;t disappear at F64.</td>
+                        <td><a href="https://learn.microsoft.com/fabric/enterprise/licenses#per-user-or-individual-licenses" target="_blank" style="color:var(--accent)">Per-User Licences</a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>OneLake Storage</strong></td>
+                        <td><code>GB &times; $/GB/month</code> &mdash; same for both options.</td>
+                        <td>~$0.023/GB/month (varies by region). Follows ADLS Gen2 Hot ZRS pricing. Not included in F-SKU.</td>
+                        <td><a href="https://learn.microsoft.com/fabric/onelake/onelake-consumption" target="_blank" style="color:var(--accent)">OneLake Consumption</a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Commitment Discount</strong></td>
+                        <td>Applied to capacity cost only (not licences or storage).</td>
+                        <td>~25% for 1-year reserved, ~40% for 3-year reserved. Only applies to the CU compute charge.</td>
+                        <td><a href="https://learn.microsoft.com/fabric/enterprise/buy-subscription#capacity-reservation" target="_blank" style="color:var(--accent)">Capacity Reservation</a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Hours per Day</strong></td>
+                        <td>F-SKUs can pause/resume. Only PAYG capacities benefit from this (reserved = always billed).</td>
+                        <td>24h = always-on. Lower values assume you pause overnight/weekends via automation.</td>
+                        <td><a href="https://learn.microsoft.com/fabric/enterprise/pause-resume" target="_blank" style="color:var(--accent)">Pause &amp; Resume</a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Regional CU Rate</strong></td>
+                        <td>Set automatically by the country selector below. Rates vary &plusmn;15&ndash;30% across regions.</td>
+                        <td>Rates are approximate PAYG list prices. Your EA/CSP/MACC agreement may differ. Always verify on the Azure Pricing Calculator.</td>
+                        <td><a href="https://azure.microsoft.com/en-us/pricing/details/microsoft-fabric/" target="_blank" style="color:var(--accent)">Fabric Pricing Page</a></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="callout" style="margin-top:16px">
+                <div class="callout-title">What This Calculator Does NOT Include</div>
+                <p>Data egress/bandwidth charges, Azure networking costs, Spark Autoscale Billing (separate meter), Power BI Embedded per-render charges, and any Microsoft Enterprise Agreement (EA) negotiated discounts. These vary significantly by organisation. For a precise quote, use the <a href="https://azure.microsoft.com/en-us/pricing/calculator/" target="_blank" style="color:var(--accent)">Azure Pricing Calculator</a> or contact your Microsoft account team.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- TCO Calculator -->
+    <div class="card">
+        <div class="card-title">Total Cost of Ownership Calculator</div>
+        <div class="card-desc">Select your country to set regional pricing, then adjust the sliders to model your scenario. Compares your current SKU + per-user licences against F64 with free viewer access.</div>
+
+        <!-- Country Search -->
+        <div style="margin-bottom:24px">
+            <div class="slider-label" style="min-width:auto;margin-bottom:8px">Country / Azure Region<small>Sets the CU rate, currency, and storage rate automatically</small></div>
+            <div style="position:relative">
+                <input type="text" id="countrySearch" class="input-field" style="width:100%;max-width:440px;padding-left:36px" placeholder="Search by country or region (e.g. United Kingdom, Germany, Australia)..." oninput="filterCountries()" onfocus="document.getElementById('countryDropdown').style.display='block'" autocomplete="off">
+                <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:16px;opacity:0.5">&#128269;</span>
+                <div id="countryDropdown" style="display:none;position:absolute;top:100%;left:0;width:100%;max-width:440px;max-height:240px;overflow-y:auto;background:var(--card);border:2px solid var(--border);border-top:none;border-radius:0 0 var(--radius-sm) var(--radius-sm);box-shadow:var(--shadow-lg);z-index:50"></div>
+            </div>
+            <div id="countryInfo" style="margin-top:8px;font-size:12.5px;color:var(--text-muted)"></div>
+        </div>
+
+        <div class="slider-group">
+            <div class="slider-row">
+                <div class="slider-label">Current F-SKU<small>Your existing or planned capacity below F64</small></div>
+                <div class="slider-track"><input type="range" id="tcoSku" min="0" max="2" step="1" value="2" oninput="updateTCO()"></div>
+                <div class="slider-value" id="tcoSkuVal">F32</div>
+            </div>
+            <div class="slider-row">
+                <div class="slider-label">Power BI Viewers<small>Users who only consume reports (free on F64+)</small></div>
+                <div class="slider-track"><input type="range" id="tcoViewers2" min="10" max="1000" step="10" value="150" oninput="updateTCO()"></div>
+                <div class="slider-value" id="tcoViewersVal">150</div>
+            </div>
+            <div class="slider-row">
+                <div class="slider-label">Report Creators<small>Authors/developers &mdash; always need Pro, even on F64</small></div>
+                <div class="slider-track"><input type="range" id="tcoCreators" min="1" max="100" step="1" value="15" oninput="updateTCO()"></div>
+                <div class="slider-value" id="tcoCreatorsVal">15</div>
+            </div>
+            <div class="slider-row">
+                <div class="slider-label">Pro Licence Cost<small>Per user/month &mdash; typically $10 (Pro) or $20 (PPU)</small></div>
+                <div class="slider-track"><input type="range" id="tcoProCost2" min="5" max="25" step="0.5" value="10" oninput="updateTCO()"></div>
+                <div class="slider-value" id="tcoProVal">$10/mo</div>
+            </div>
+            <div class="slider-row">
+                <div class="slider-label">Region CU Rate<small>Set by country selector or adjust manually</small></div>
+                <div class="slider-track"><input type="range" id="tcoCuRate2" min="0.08" max="0.50" step="0.01" value="0.18" oninput="updateTCO()"></div>
+                <div class="slider-value" id="tcoCuVal">$0.18/hr</div>
+            </div>
+            <div class="slider-row">
+                <div class="slider-label">Hours per Day Running<small>F-SKUs can pause/resume &mdash; 24h if always-on</small></div>
+                <div class="slider-track"><input type="range" id="tcoHours" min="8" max="24" step="1" value="24" oninput="updateTCO()"></div>
+                <div class="slider-value" id="tcoHoursVal">24h</div>
+            </div>
+            <div class="slider-row">
+                <div class="slider-label">Commitment Discount<small>0%=PAYG, ~25%=1yr reserved, ~40%=3yr reserved</small></div>
+                <div class="slider-track"><input type="range" id="tcoDiscount" min="0" max="40" step="5" value="0" oninput="updateTCO()"></div>
+                <div class="slider-value" id="tcoDiscVal">0%</div>
+            </div>
+            <div class="slider-row">
+                <div class="slider-label">OneLake Storage (GB)<small>Pay-as-you-go &mdash; not included in SKU</small></div>
+                <div class="slider-track"><input type="range" id="tcoStorage" min="0" max="5000" step="50" value="500" oninput="updateTCO()"></div>
+                <div class="slider-value" id="tcoStorVal">500 GB</div>
+            </div>
+        </div>
+
+        <div id="tcoResults2"></div>
+
+        <div class="callout" style="margin-top:20px">
+            <div class="callout-title">Important Caveat &mdash; OneLake Storage</div>
+            <p>OneLake storage is billed separately as pay-as-you-go per GB &mdash; it is <strong>not</strong> included free with your F-SKU. The exception is <strong>Mirroring storage</strong>, which provides 1 TB free per CU purchased. General Lakehouse, Warehouse, and other OneLake storage is always a separate line item.</p>
+        </div>
+        <div class="source-ref">Sources: <a href="https://learn.microsoft.com/fabric/enterprise/licenses#per-user-or-individual-licenses" target="_blank">Per-User Licenses</a>, <a href="https://learn.microsoft.com/fabric/onelake/onelake-consumption" target="_blank">OneLake Storage Consumption</a>, <a href="https://azure.microsoft.com/en-us/pricing/details/microsoft-fabric/" target="_blank">Fabric Pricing</a>, <a href="https://learn.microsoft.com/fabric/enterprise/buy-subscription#capacity-reservation" target="_blank">Capacity Reservation</a> &mdash; Microsoft Learn</div>
+    </div>
+
+    <!-- Direct Lake Guardrails -->
+    <div class="card guardrail-highlight">
+        <div class="card-title">Direct Lake Guardrails by SKU</div>
+        <div class="card-desc">Exceeding the max model size on disk triggers fallback to DirectQuery mode &mdash; dramatically slower.</div>
+        <table class="data-table">
+            <thead><tr><th>SKU</th><th>Parquet Files / Table</th><th>Row Groups / Table</th><th>Rows / Table (millions)</th><th>Max Model on Disk</th><th>Max Memory</th></tr></thead>
+            <tbody>
+                <tr><td><code>F2</code></td><td>1,000</td><td>1,000</td><td>300</td><td>10 GB</td><td>3 GB</td></tr>
+                <tr><td><code>F4</code></td><td>1,000</td><td>1,000</td><td>300</td><td>10 GB</td><td>3 GB</td></tr>
+                <tr><td><code>F8</code></td><td>1,000</td><td>1,000</td><td>300</td><td>10 GB</td><td>3 GB</td></tr>
+                <tr><td><code>F16</code></td><td>1,000</td><td>1,000</td><td>300</td><td>20 GB</td><td>5 GB</td></tr>
+                <tr><td><code>F32</code></td><td>1,000</td><td>1,000</td><td>300</td><td>40 GB</td><td>10 GB</td></tr>
+                <tr style="background:var(--accent-light)"><td><code style="background:var(--accent);color:white">F64</code></td><td><strong>5,000</strong></td><td><strong>5,000</strong></td><td><strong>1,500</strong></td><td><strong>Unlimited</strong></td><td><strong>25 GB</strong></td></tr>
+                <tr><td><code>F128</code></td><td>5,000</td><td>5,000</td><td>3,000</td><td>Unlimited</td><td>50 GB</td></tr>
+                <tr><td><code>F256</code></td><td>5,000</td><td>5,000</td><td>6,000</td><td>Unlimited</td><td>100 GB</td></tr>
+                <tr><td><code>F512</code></td><td>10,000</td><td>10,000</td><td>12,000</td><td>Unlimited</td><td>200 GB</td></tr>
+                <tr><td><code>F1024</code></td><td>10,000</td><td>10,000</td><td>24,000</td><td>Unlimited</td><td>400 GB</td></tr>
+                <tr><td><code>F2048</code></td><td>10,000</td><td>10,000</td><td>24,000</td><td>Unlimited</td><td>400 GB</td></tr>
+            </tbody>
+        </table>
+        <div class="source-ref">Source: <a href="https://learn.microsoft.com/fabric/fundamentals/direct-lake-overview#fabric-capacity-requirements" target="_blank">Direct Lake &mdash; Fabric Capacity Requirements</a> &mdash; Microsoft Learn</div>
+    </div>
+
+    </div><!-- /section-panel f64-decision -->
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SECTION 4: SPARK                          -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section-panel" data-section="spark-burst">
+    <div id="spark-burst" class="section-anchor"></div>
+    <div class="section-header">
+        <div class="section-number">4</div>
+        <div class="section-title-group">
+            <div class="section-title">Spark Burst &amp; Autoscale Billing</div>
+            <div class="section-subtitle">Two fundamentally different Spark execution models &mdash; choosing the right one is an architectural decision</div>
+        </div>
+    </div>
+
+    <div class="layer-indicator">
+        <div class="layer-diagram">
+            <div class="layer-bar l-azure"></div>
+            <div class="layer-bar l-capacity active"></div>
+            <div class="layer-bar l-workspace"></div>
+            <div class="layer-bar l-items active"></div>
+            <div class="layer-bar l-users"></div>
+        </div>
+        <div class="layer-text">
+            <div class="layer-label" style="color:var(--layer-items)">Zooming into: Capacity + Items Layers</div>
+            <div class="layer-explain">Spark converts CUs into <span class="term">Spark VCores<span class="term-tip"><strong>Spark VCores:</strong> Virtual CPU cores for Apache Spark. 1 CU = 2 Spark VCores. F64 gives 128 base VCores.</span></span> (1 CU = 2 VCores) and offers a unique 3&times; burst factor. Autoscale Billing changes this model entirely.</div>
+        </div>
+    </div>
+
+    <div class="why-care">
+        <div class="why-care-icon">&#128161;</div>
+        <div class="why-care-text">If you&rsquo;re running data engineering workloads (notebooks, Spark jobs, Lakehouse operations), this determines whether your ETL jobs complete on time or get queued. It also determines whether Spark competes with Power BI for the same CU budget.</div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Two Spark Execution Models</div>
+        <div class="card-desc">Fabric offers two distinct approaches to running Spark workloads with different billing, concurrency, and trade-offs.</div>
+
+        <!-- Real-world context: who uses Spark and for what -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+            <div style="background:var(--accent-light);border-radius:var(--radius-md);padding:20px 22px;border:1px solid rgba(196,101,58,0.12)">
+                <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:8px">When You&rsquo;d Use Capacity-Based Spark</div>
+                <div style="font-size:13.5px;color:var(--text-secondary);line-height:1.6">
+                    <strong style="color:var(--text-primary)">Typical roles:</strong> Data Engineers, Analytics Engineers, Platform Teams<br><br>
+                    <strong style="color:var(--text-primary)">Common tasks:</strong><br>
+                    &bull; Scheduled overnight ETL &mdash; ingesting data from source systems (SAP, Dynamics, SQL Server) into a Lakehouse medallion architecture<br>
+                    &bull; Delta table maintenance &mdash; OPTIMIZE, VACUUM, Z-ORDER compaction jobs that run on a predictable daily cadence<br>
+                    &bull; Large-scale data transformations &mdash; PySpark notebooks cleaning, deduplicating, or enriching millions of rows before they land in the Gold layer<br>
+                    &bull; Semantic model refresh preprocessing &mdash; aggregating fact tables so Power BI Direct Lake models stay within guardrail limits<br><br>
+                    <strong style="color:var(--text-primary)">Why capacity works here:</strong> These jobs are predictable. You know they run at 2am, take 45 minutes, and the 24-hour smoothing window absorbs the spike without impacting daytime BI users.
+                </div>
+            </div>
+            <div style="background:var(--green-bg);border-radius:var(--radius-md);padding:20px 22px;border:1px solid rgba(91,140,90,0.15)">
+                <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:8px">When You&rsquo;d Use Autoscale Billing</div>
+                <div style="font-size:13.5px;color:var(--text-secondary);line-height:1.6">
+                    <strong style="color:var(--text-primary)">Typical roles:</strong> Data Scientists, ML Engineers, Advanced Analytics Teams, Ad-hoc Analysts<br><br>
+                    <strong style="color:var(--text-primary)">Common tasks:</strong><br>
+                    &bull; Exploratory data science &mdash; interactive Spark notebooks where a data scientist is experimenting with feature engineering, model training, or statistical analysis on unpredictable schedules<br>
+                    &bull; ML model training &mdash; GPU or CPU-intensive jobs that spike heavily for 2 hours then go silent for days<br>
+                    &bull; Ad-hoc large data exploration &mdash; business analysts running one-off Spark SQL queries against the Lakehouse to investigate data quality issues or answer urgent executive questions<br>
+                    &bull; Event-driven pipelines &mdash; real-time or near-real-time ingestion triggered by external events (file drops, API webhooks) where volume is unpredictable<br><br>
+                    <strong style="color:var(--text-primary)">Why autoscale works here:</strong> These jobs are bursty and unpredictable. You don&rsquo;t want them competing with production Power BI dashboards for CU budget, and you only want to pay when they actually run.
+                </div>
+            </div>
+        </div>
+
+        <div class="spark-diagram">
+            <div class="spark-mode spark-capacity">
+                <div class="spark-mode-label">Model A</div>
+                <div class="spark-mode-title">Capacity-Based (Default)</div>
+                <ul>
+                    <li>Spark jobs consume CUs from your Fabric capacity</li>
+                    <li>1 CU = 2 Spark VCores</li>
+                    <li>3&times; <span class="term">burst factor<span class="term-tip"><strong>Burst factor:</strong> Spark can temporarily use 3&times; its base VCore allocation. F64 has 128 base VCores but can burst to 384.</span></span> for concurrent execution</li>
+                    <li>24-hour smoothing applies</li>
+                    <li>Throttled when capacity is overloaded</li>
+                    <li>Job-level bursting switch for admin control</li>
+                </ul>
+            </div>
+            <div class="spark-mode spark-autoscale">
+                <div class="spark-mode-label">Model B</div>
+                <div class="spark-mode-title">Autoscale Billing (Opt-In)</div>
+                <ul>
+                    <li>Spark jobs offloaded from Fabric capacity entirely</li>
+                    <li>Pure pay-as-you-go &mdash; no idle compute costs</li>
+                    <li>No bursting, no smoothing</li>
+                    <li>Max CU limit configurable for budget governance</li>
+                    <li>Billed separately in Azure Cost Analysis</li>
+                    <li>Throttled/queued when CU limit is reached</li>
+                </ul>
+            </div>
+        </div>
+        <div class="callout-green callout">
+            <div class="callout-title">When to Choose Which</div>
+            <p><strong>Capacity-Based</strong> suits predictable Spark workloads that benefit from smoothing &mdash; heavy overnight ETL spread across 24 hours. <strong>Autoscale Billing</strong> suits bursty or unpredictable workloads where you want cost isolation from Power BI.</p>
+        </div>
+        <div class="source-ref">Sources: <a href="https://learn.microsoft.com/fabric/data-engineering/autoscale-billing-for-spark-overview" target="_blank">Autoscale Billing for Spark</a>, <a href="https://learn.microsoft.com/fabric/data-engineering/spark-job-concurrency-and-queueing" target="_blank">Spark Concurrency</a> &mdash; Microsoft Learn</div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Spark VCores by SKU &mdash; Base vs Burst</div>
+        <div class="card-desc">Every CU provides 2 Spark VCores. The 3&times; burst factor triples available VCores for concurrent execution.</div>
+        <div id="vcoreChart"></div>
+        <div class="callout">
+            <div class="callout-title">Job-Level Bursting Switch</div>
+            <p>Admins can disable job-level bursting via <strong>Admin Portal &rarr; Capacity Settings &rarr; Data Engineering/Science &rarr; Spark Compute</strong>. When disabled, individual jobs are capped at base VCores, preserving capacity for concurrent jobs.</p>
+        </div>
+        <div class="source-ref">Source: <a href="https://learn.microsoft.com/fabric/data-engineering/capacity-settings-management#admin-control-job-level-bursting-switch" target="_blank">Job-Level Bursting Switch</a> &mdash; Microsoft Learn</div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Data Warehouse Burstable Capacity</div>
+        <div class="card-desc">Warehouse has its own burst model &mdash; 1 CU = 0.5 Warehouse vCores. Smaller SKUs get higher burst factors to compensate.</div>
+        <table class="data-table">
+            <thead><tr><th>SKU</th><th>Baseline CU</th><th>DW vCores</th><th>Burst Factor</th><th>Note</th></tr></thead>
+            <tbody>
+                <tr><td><code>F2</code></td><td>2</td><td>1</td><td>1&times;&ndash;32&times;</td><td>Dev/test &mdash; high burst compensates small base</td></tr>
+                <tr><td><code>F4</code></td><td>4</td><td>2</td><td>1&times;&ndash;16&times;</td><td></td></tr>
+                <tr><td><code>F8</code></td><td>8</td><td>4</td><td>1&times;&ndash;12&times;</td><td>Common dev/test entry point</td></tr>
+                <tr><td><code>F16</code></td><td>16</td><td>8</td><td>1&times;&ndash;12&times;</td><td></td></tr>
+                <tr><td><code>F32</code></td><td>32</td><td>16</td><td>1&times;&ndash;12&times;</td><td></td></tr>
+                <tr style="background:var(--accent-light)"><td><code style="background:var(--accent);color:white">F64</code></td><td>64</td><td>32</td><td>1&times;&ndash;12&times;</td><td>Production entry point</td></tr>
+                <tr><td><code>F128</code></td><td>128</td><td>64</td><td>1&times;&ndash;12&times;</td><td></td></tr>
+                <tr><td><code>F256</code></td><td>256</td><td>128</td><td>1&times;&ndash;12&times;</td><td></td></tr>
+                <tr><td><code>F512</code></td><td>512</td><td>256</td><td>1&times;&ndash;12&times;</td><td>Heavy workloads</td></tr>
+                <tr><td><code>F1024</code></td><td>1024</td><td>512</td><td>1&times;&ndash;12&times;</td><td></td></tr>
+                <tr><td><code>F2048</code></td><td>2048</td><td>1024</td><td>1&times;&ndash;12&times;</td><td></td></tr>
+            </tbody>
+        </table>
+        <p style="font-size:13px;color:var(--text-secondary);margin-top:16px">Maximum burst is typically for very short intervals (milliseconds within a query). Sustained burst will be lower.</p>
+        <div class="source-ref">Source: <a href="https://learn.microsoft.com/fabric/data-warehouse/burstable-capacity#sku-guardrails" target="_blank">Burstable Capacity &mdash; SKU Guardrails</a> &mdash; Microsoft Learn</div>
+    </div>
+
+    </div><!-- /section-panel spark-burst -->
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SECTION 5: CROSS-WORKLOAD                 -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section-panel" data-section="cross-workload">
+    <div id="cross-workload" class="section-anchor"></div>
+    <div class="section-header">
+        <div class="section-number">5</div>
+        <div class="section-title-group">
+            <div class="section-title">Cross-Workload CU Conversion Map</div>
+            <div class="section-subtitle">All workloads share the same CU pool &mdash; but convert at different rates and smooth differently</div>
+        </div>
+    </div>
+
+    <div class="layer-indicator">
+        <div class="layer-diagram">
+            <div class="layer-bar l-azure"></div><div class="layer-bar l-capacity"></div>
+            <div class="layer-bar l-workspace active"></div><div class="layer-bar l-items active"></div>
+            <div class="layer-bar l-users"></div>
+        </div>
+        <div class="layer-text">
+            <div class="layer-label" style="color:var(--layer-workspace)">Zooming into: Workspace + Items Layers</div>
+            <div class="layer-explain">Different item types consume CUs at different rates and are classified as interactive or background &mdash; determining their smoothing window. This is where workload contention happens.</div>
+        </div>
+    </div>
+
+    <div class="why-care">
+        <div class="why-care-icon">&#128161;</div>
+        <div class="why-care-text">This explains why Power BI reports slow down when a large Spark job is running &mdash; and what you can do about it. Understanding which workloads compete for the same CU budget is essential for capacity planning.</div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">CU Conversion Ratios by Workload</div>
+        <div class="card-desc">Each workload converts CUs into its native compute unit at a different ratio. Operation type determines the smoothing window.</div>
+        <table class="data-table">
+            <thead><tr><th>Workload</th><th>CU Conversion</th><th>Op Type</th><th>Smoothing</th><th>Source</th></tr></thead>
+            <tbody>
+                <tr><td><strong>Apache Spark</strong></td><td><code>1 CU = 2 Spark VCores</code></td><td><span class="badge badge-dark">Background</span></td><td>24 hours</td><td><a href="https://learn.microsoft.com/fabric/data-engineering/spark-job-concurrency-and-queueing" target="_blank" style="color:var(--accent)">Docs</a></td></tr>
+                <tr><td><strong>Data Warehouse</strong></td><td><code>1 CU = 0.5 DW vCores</code></td><td><span class="badge badge-dark">Background</span></td><td>24 hours</td><td><a href="https://learn.microsoft.com/fabric/data-warehouse/usage-reporting" target="_blank" style="color:var(--accent)">Docs</a></td></tr>
+                <tr><td><strong>SQL Database</strong></td><td><code>1 CU = 0.383 SQL DB vCores</code></td><td><span class="badge badge-accent">Interactive</span></td><td>5&ndash;64 min</td><td><a href="https://learn.microsoft.com/fabric/enterprise/fabric-operations" target="_blank" style="color:var(--accent)">Docs</a></td></tr>
+                <tr><td><strong>Power BI Refresh</strong></td><td>Varies by model size/complexity</td><td><span class="badge badge-dark">Background</span></td><td>24 hours</td><td><a href="https://learn.microsoft.com/fabric/enterprise/fabric-operations" target="_blank" style="color:var(--accent)">Docs</a></td></tr>
+                <tr><td><strong>Power BI Report Render</strong></td><td>Varies by DAX complexity</td><td><span class="badge badge-accent">Interactive</span></td><td>5&ndash;64 min</td><td><a href="https://learn.microsoft.com/fabric/enterprise/fabric-operations" target="_blank" style="color:var(--accent)">Docs</a></td></tr>
+                <tr><td><strong>Dataflow Gen2</strong></td><td>Varies (includes staging)</td><td><span class="badge badge-dark">Background</span></td><td>24 hours</td><td><a href="https://learn.microsoft.com/fabric/enterprise/fabric-operations" target="_blank" style="color:var(--accent)">Docs</a></td></tr>
+                <tr><td><strong>Data Pipeline</strong></td><td>1.5 CU-hrs per throughput unit</td><td><span class="badge badge-dark">Background</span></td><td>24 hours</td><td><a href="https://learn.microsoft.com/fabric/data-factory/pricing-pipelines" target="_blank" style="color:var(--accent)">Docs</a></td></tr>
+                <tr><td><strong>Copilot</strong></td><td>Token-based formula</td><td><span class="badge badge-dark">Background</span></td><td>24 hours</td><td><a href="https://learn.microsoft.com/fabric/fundamentals/copilot-fabric-consumption" target="_blank" style="color:var(--accent)">Docs</a></td></tr>
+                <tr><td><strong>OneLake Transactions</strong></td><td>Consume CUs (no separate charge)</td><td><span class="badge badge-accent">Interactive</span></td><td>5&ndash;64 min</td><td><a href="https://learn.microsoft.com/fabric/onelake/onelake-capacity-consumption" target="_blank" style="color:var(--accent)">Docs</a></td></tr>
+            </tbody>
+        </table>
+        <div class="callout">
+            <div class="callout-title">Why This Matters</div>
+            <p>All workloads compete for the same CU pool. A large Spark job smoothed over 24 hours still adds load per timepoint. Concurrent Power BI refreshes, Warehouse queries, and Spark jobs all accumulate. This is why multi-capacity architecture patterns exist &mdash; to isolate contention between workloads.</p>
+        </div>
+        <div class="source-ref">Source: <a href="https://learn.microsoft.com/fabric/enterprise/fabric-operations#fabric-operations-by-experience" target="_blank">Fabric Operations by Experience</a> &mdash; Microsoft Learn</div>
+    </div>
+
+    </div><!-- /section-panel cross-workload -->
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SECTION 6: SKU REFERENCE                  -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section-panel" data-section="sku-reference">
+    <div id="sku-reference" class="section-anchor"></div>
+    <div class="section-header">
+        <div class="section-number">6</div>
+        <div class="section-title-group">
+            <div class="section-title">SKU Quick Reference</div>
+            <div class="section-subtitle">The complete F-SKU specification table with equivalency mapping</div>
+        </div>
+    </div>
+
+    <div class="layer-indicator">
+        <div class="layer-diagram">
+            <div class="layer-bar l-azure active"></div><div class="layer-bar l-capacity active"></div>
+            <div class="layer-bar l-workspace"></div><div class="layer-bar l-items"></div><div class="layer-bar l-users"></div>
+        </div>
+        <div class="layer-text">
+            <div class="layer-label" style="color:var(--layer-azure)">Zooming into: Azure + Capacity Layers</div>
+            <div class="layer-explain">This is the starting point for any deployment &mdash; choosing which F-SKU to provision. This table consolidates everything from previous sections.</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <table class="data-table">
+            <thead><tr><th>SKU</th><th>CUs</th><th>30-sec Budget</th><th>Spark VCores</th><th>Spark (3&times; Burst)</th><th>DW vCores</th><th>P-SKU Equiv</th><th>Free Viewer?</th></tr></thead>
+            <tbody>
+                <tr><td><code>F2</code></td><td>2</td><td>60</td><td>4</td><td>20</td><td>1</td><td>&mdash;</td><td>&#10060;</td></tr>
+                <tr><td><code>F4</code></td><td>4</td><td>120</td><td>8</td><td>24</td><td>2</td><td>&mdash;</td><td>&#10060;</td></tr>
+                <tr><td><code>F8</code></td><td>8</td><td>240</td><td>16</td><td>48</td><td>4</td><td>EM/A1</td><td>&#10060;</td></tr>
+                <tr><td><code>F16</code></td><td>16</td><td>480</td><td>32</td><td>96</td><td>8</td><td>EM2/A2</td><td>&#10060;</td></tr>
+                <tr><td><code>F32</code></td><td>32</td><td>960</td><td>64</td><td>192</td><td>16</td><td>EM3/A3</td><td>&#10060;</td></tr>
+                <tr style="background:var(--accent-light);font-weight:600"><td><code style="background:var(--accent);color:white">F64</code></td><td>64</td><td>1,920</td><td>128</td><td>384</td><td>32</td><td>P1/A4</td><td>&#9989;</td></tr>
+                <tr><td><code>F128</code></td><td>128</td><td>3,840</td><td>256</td><td>768</td><td>64</td><td>P2/A5</td><td>&#9989;</td></tr>
+                <tr><td><code>F256</code></td><td>256</td><td>7,680</td><td>512</td><td>1,536</td><td>128</td><td>P3/A6</td><td>&#9989;</td></tr>
+                <tr><td><code>F512</code></td><td>512</td><td>15,360</td><td>1,024</td><td>3,072</td><td>256</td><td>P4/A7</td><td>&#9989;</td></tr>
+                <tr><td><code>F1024</code></td><td>1,024</td><td>30,720</td><td>2,048</td><td>6,144</td><td>512</td><td>P5/A8</td><td>&#9989;</td></tr>
+                <tr><td><code>F2048</code></td><td>2,048</td><td>61,440</td><td>4,096</td><td>12,288</td><td>1,024</td><td>&mdash;</td><td>&#9989;</td></tr>
+            </tbody>
+        </table>
+        <div class="source-ref">Sources: <a href="https://learn.microsoft.com/fabric/enterprise/licenses#core-building-blocks" target="_blank">Fabric Licenses</a>, <a href="https://learn.microsoft.com/fabric/enterprise/plan-capacity" target="_blank">Plan Your Capacity Size</a> &mdash; Microsoft Learn</div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">F-SKU vs P-SKU &mdash; Feature Parity</div>
+        <div class="card-desc">P-SKUs (Power BI Premium) are being retired. F-SKUs unlock Azure-native capabilities that P-SKUs cannot access.</div>
+        <table class="data-table">
+            <thead><tr><th>Feature</th><th>F SKU</th><th>P SKU</th></tr></thead>
+            <tbody>
+                <tr><td>ARM APIs and Terraform</td><td>&#9989;</td><td>&#10060;</td></tr>
+                <tr><td>Managed Private Endpoints</td><td>&#9989;</td><td>&#10060;</td></tr>
+                <tr><td>On-demand Resizing</td><td>&#9989;</td><td>&#10060;</td></tr>
+                <tr><td>Pause and Resume</td><td>&#9989;</td><td>&#10060;</td></tr>
+                <tr><td>Spark Autoscale Billing</td><td>&#9989;</td><td>&#10060;</td></tr>
+                <tr><td>Trusted Workspace Access</td><td>&#9989;</td><td>&#10060;</td></tr>
+                <tr><td>Customer-Managed Keys</td><td>&#9989;</td><td>&#10060;</td></tr>
+                <tr><td>Copilot</td><td>&#9989;</td><td>&#9989;</td></tr>
+                <tr><td>Power BI Autoscale</td><td>&#10060;</td><td>&#9989;</td></tr>
+                <tr><td>Pricing Model</td><td>Regional</td><td>Global</td></tr>
+                <tr><td>Commitment Options</td><td>PAYG, Monthly, Yearly</td><td>Monthly, Yearly</td></tr>
+            </tbody>
+        </table>
+        <div class="source-ref">Source: <a href="https://learn.microsoft.com/fabric/enterprise/fabric-features" target="_blank">Microsoft Fabric Features Parity</a> &mdash; Microsoft Learn</div>
+    </div>
+    </div><!-- /section-panel sku-reference -->
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SECTION 7: FAQ                             -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="section-panel" data-section="faq">
+    <div id="faq" class="section-anchor"></div>
+    <div class="section-header">
+        <div class="section-number" style="background:var(--orange)">7</div>
+        <div class="section-title-group">
+            <div class="section-title">Frequently Asked Questions</div>
+            <div class="section-subtitle">The questions that come up most after reading through the accelerator</div>
+        </div>
+    </div>
+
+    <div class="why-care">
+        <div class="why-care-icon">&#128172;</div>
+        <div class="why-care-text">These questions are drawn from real conversations with architects, finance teams, and platform leads evaluating or already running Microsoft Fabric. If your question isn&rsquo;t here, the answer is likely covered in one of the sections above.</div>
+    </div>
+
+    <!-- FAQ: Getting Started -->
+    <div class="card">
+        <div class="card-title">Getting Started &amp; SKU Selection</div>
+        <div class="faq-list">
+
+            <div class="faq-item">
+                <button class="faq-q" onclick="toggleFaq(this)">
+                    <span>What&rsquo;s the minimum SKU I need to run Fabric in production?</span>
+                    <span class="faq-chevron">&#9662;</span>
+                </button>
+                <div class="faq-a">
+                    <p>Technically, F2 is the smallest SKU &mdash; but it&rsquo;s only suitable for developer sandboxes or proof-of-concept work. For production workloads with report consumers, <strong>F64 is the practical minimum</strong> because it unlocks the viewer licensing boundary: on F64 and above, users with only a free Fabric licence and a Viewer role can view Power BI content. Below F64, every report viewer needs a paid Pro licence ($14/user/month as of April 2025), which quickly becomes more expensive than the capacity itself. Direct Lake guardrails also increase significantly at F64. Note that Copilot and AI capabilities are now available on all paid SKUs (F2+) as of April 30 2025, so that is no longer an F64 differentiator.</p>
+                    <span class="faq-source">Sources: <a href="https://learn.microsoft.com/fabric/enterprise/licenses" target="_blank">Fabric Licences &mdash; MS Learn</a> &middot; <a href="https://blog.fabric.microsoft.com/en/blog/copilot-and-ai-capabilities-now-accessible-to-all-paid-skus-in-microsoft-fabric" target="_blank">Copilot SKU Update &mdash; Fabric Blog</a></span>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-q" onclick="toggleFaq(this)">
+                    <span>Can I start with a smaller SKU and scale up later?</span>
+                    <span class="faq-chevron">&#9662;</span>
+                </button>
+                <div class="faq-a">
+                    <p>Yes. F-SKUs support on-demand resizing through the Azure portal, REST APIs, or automation tools like Logic Apps &mdash; you can scale up or down without redeploying workspaces. Many organisations start with <strong>F64 on PAYG</strong> (pay-as-you-go) to validate workloads, then commit to a reserved instance once they understand their actual consumption. You can also <strong>pause and resume</strong> the capacity outside business hours to reduce costs during evaluation. The key constraint: pause and resume only applies to F-SKUs &mdash; P-SKUs (legacy) can only be scaled, not paused. You cannot resize from a P-SKU to an F-SKU in-place; that requires migration.</p>
+                    <span class="faq-source">Sources: <a href="https://learn.microsoft.com/fabric/enterprise/pause-resume" target="_blank">Pause and Resume &mdash; MS Learn</a> &middot; <a href="https://learn.microsoft.com/fabric/enterprise/scale-capacity" target="_blank">Scale Capacity &mdash; MS Learn</a></span>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-q" onclick="toggleFaq(this)">
+                    <span>What&rsquo;s the difference between PAYG and reserved instance pricing?</span>
+                    <span class="faq-chevron">&#9662;</span>
+                </button>
+                <div class="faq-a">
+                    <p><strong>PAYG (Pay-As-You-Go)</strong> bills per second of uptime with no commitment &mdash; ideal for evaluation, dev/test, and workloads you pause outside hours. <strong>Reserved instances (1-year)</strong> offer significant discounts (community sources cite approximately 40% savings over PAYG, though exact figures vary by region and agreement). You can combine both: use a reserved instance for your production baseline and supplement with PAYG for burst periods. Fabric reservations are applied before general Azure Savings Plans (specificity wins). Most enterprises land on yearly reservation for production and PAYG for dev/test capacities they pause overnight. The TCO Calculator in Section 3 models both scenarios with your specific inputs.</p>
+                    <span class="faq-source">Sources: <a href="https://learn.microsoft.com/fabric/enterprise/buy-subscription" target="_blank">Buy a Fabric Subscription &mdash; MS Learn</a> &middot; <a href="https://learn.microsoft.com/fabric/enterprise/optimize-capacity" target="_blank">Evaluate &amp; Optimise Capacity &mdash; MS Learn</a></span>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-q" onclick="toggleFaq(this)">
+                    <span>Do I still need Power BI Pro licences if I&rsquo;m on Fabric?</span>
+                    <span class="faq-chevron">&#9662;</span>
+                </button>
+                <div class="faq-a">
+                    <p>It depends on your SKU and the user&rsquo;s role. <strong>Below F64:</strong> every user consuming Power BI content needs a Pro, PPU, or individual trial licence. <strong>F64 and above:</strong> users with only a free Fabric licence and a Viewer role can view Power BI content &mdash; no Pro required. However, <strong>content creators and publishers always need a Pro or PPU licence</strong> regardless of SKU size, as they need to publish and share Power BI items in shared workspaces. This is the single most important licensing nuance in Fabric and the reason the F64 boundary is an architectural decision, not just a sizing one. See Section 3 for the full break-even analysis.</p>
+                    <span class="faq-source">Source: <a href="https://learn.microsoft.com/fabric/enterprise/licenses" target="_blank">Understand Microsoft Fabric Licences &mdash; MS Learn</a></span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- FAQ: CU & Performance -->
+    <div class="card">
+        <div class="card-title">CU Consumption &amp; Performance</div>
+        <div class="faq-list">
+
+            <div class="faq-item">
+                <button class="faq-q" onclick="toggleFaq(this)">
+                    <span>What happens if I exceed my CU capacity &mdash; do reports stop working?</span>
+                    <span class="faq-chevron">&#9662;</span>
+                </button>
+                <div class="faq-a">
+                    <p>Not immediately. Fabric uses a <strong>three-stage progressive throttling</strong> model. First, the capacity provides 10 minutes of overage protection with no throttling at all. <strong>Stage 1 (10-min overuse):</strong> new interactive operations (report renders, queries) are delayed by 20 seconds. <strong>Stage 2 (60-min overuse):</strong> new interactive operations are rejected entirely, but background operations can still start. <strong>Stage 3 (24-hour overuse):</strong> all new requests &mdash; both interactive and background &mdash; are rejected. Importantly, in-flight operations are never terminated mid-execution; throttling only affects new requests. In practice, you&rsquo;ll see interactive delays before anything is rejected, and background jobs are the last to be blocked.</p>
+                    <span class="faq-source">Source: <a href="https://learn.microsoft.com/fabric/enterprise/throttling" target="_blank">Understand Your Fabric Capacity Throttling &mdash; MS Learn</a></span>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-q" onclick="toggleFaq(this)">
+                    <span>How does smoothing actually work &mdash; and why does it matter?</span>
+                    <span class="faq-chevron">&#9662;</span>
+                </button>
+                <div class="faq-a">
+                    <p>Smoothing spreads the CU cost of an operation across a time window rather than billing it all at the moment of execution. <strong>Interactive operations</strong> (report renders, live queries) are evaluated against shorter windows (10-minute and 60-minute thresholds). <strong>Background operations</strong> (Spark jobs, refreshes, Dataflows, Warehouse queries) are smoothed over 24 hours. Smoothing doesn&rsquo;t change actual performance &mdash; jobs still execute at full speed &mdash; it only spreads the <em>accounting</em> for consumed compute over a longer period. This means a Spark job that bursts heavily for 5 minutes is averaged across 24 hours, appearing as a tiny sustained load. This is why scheduling ETL overnight rarely causes throttling during business hours.</p>
+                    <span class="faq-source">Sources: <a href="https://learn.microsoft.com/fabric/enterprise/throttling" target="_blank">Fabric Throttling Policy &mdash; MS Learn</a> &middot; <a href="https://learn.microsoft.com/fabric/data-warehouse/compute-capacity-smoothing-throttling" target="_blank">Warehouse Smoothing &amp; Throttling &mdash; MS Learn</a></span>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-q" onclick="toggleFaq(this)">
+                    <span>Can Power BI refreshes and Spark jobs run at the same time without issues?</span>
+                    <span class="faq-chevron">&#9662;</span>
+                </button>
+                <div class="faq-a">
+                    <p>They can, but they share the same CU pool &mdash; so they compete for resources. Both Power BI refreshes and Spark jobs are classified as background operations with 24-hour smoothing, which helps absorb spikes. The real risk is when both burst simultaneously (e.g., morning refresh + late-running ETL). Mitigations include: <strong>staggering schedules</strong> (ETL overnight, refresh early morning), <strong>multi-capacity architecture</strong> (isolate Spark on a separate capacity), or <strong>Spark Autoscale Billing</strong> which runs Spark jobs on separate Azure meters outside your shared CU pool entirely. Active Spark sessions accrue CU utilisation even when idle, so always close sessions when not in use.</p>
+                    <span class="faq-source">Sources: <a href="https://learn.microsoft.com/fabric/enterprise/optimize-capacity" target="_blank">Evaluate &amp; Optimise Capacity &mdash; MS Learn</a> &middot; <a href="https://learn.microsoft.com/fabric/data-engineering/spark-job-concurrency-and-queueing" target="_blank">Spark Concurrency &amp; Queueing &mdash; MS Learn</a></span>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-q" onclick="toggleFaq(this)">
+                    <span>How do I monitor my actual CU consumption?</span>
+                    <span class="faq-chevron">&#9662;</span>
+                </button>
+                <div class="faq-a">
+                    <p>Microsoft provides the <strong>Microsoft Fabric Capacity Metrics App</strong> (free from AppSource). It connects to your capacity and shows real-time and historical CU consumption broken down by workload type, workspace, item, and operation. The Compute page shows CU utilisation over time, throttling levels (interactive delay, interactive rejection, background rejection), and a matrix of items by consumption. System events track when capacities are paused/resumed. For Azure-level cost tracking, Spark Autoscale usage appears as a separate meter in <strong>Azure Cost Analysis</strong>. Capacity admins can also configure email alerts when consumption exceeds 100% of provisioned CUs.</p>
+                    <span class="faq-source">Sources: <a href="https://learn.microsoft.com/fabric/enterprise/metrics-app-compute-page" target="_blank">Metrics App Compute Page &mdash; MS Learn</a> &middot; <a href="https://learn.microsoft.com/fabric/enterprise/metrics-app" target="_blank">Fabric Capacity Metrics App &mdash; MS Learn</a></span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- FAQ: Architecture & Governance -->
+    <div class="card">
+        <div class="card-title">Architecture &amp; Governance</div>
+        <div class="faq-list">
+
+            <div class="faq-item">
+                <button class="faq-q" onclick="toggleFaq(this)">
+                    <span>Should I use one large capacity or multiple smaller ones?</span>
+                    <span class="faq-chevron">&#9662;</span>
+                </button>
+                <div class="faq-a">
+                    <p>It depends on your workload isolation requirements. A <strong>single large capacity</strong> is simpler to manage and benefits from pooled smoothing &mdash; spikes from one workload are absorbed by idle periods from others. <strong>Multiple capacities</strong> make sense when: you need cost attribution per department, you want to isolate Spark from Power BI (preventing contention), you have regulatory requirements for data residency across regions, or you want different throttling tolerance for production vs dev/test. Microsoft recommends provisioning multiple capacities to help isolate compute for high-priority items and to support self-service or development content. Note that scaling up always doubles SKU size (F32 &rarr; F64 &rarr; F128), so scaling out across multiple capacities can sometimes be more cost-efficient.</p>
+                    <span class="faq-source">Sources: <a href="https://learn.microsoft.com/fabric/enterprise/optimize-capacity" target="_blank">Evaluate &amp; Optimise Capacity &mdash; MS Learn</a> &middot; <a href="https://learn.microsoft.com/fabric/enterprise/capacity-planning-manage-capacity-growth-governance" target="_blank">Capacity Planning Guide &mdash; MS Learn</a></span>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-q" onclick="toggleFaq(this)">
+                    <span>Can I assign specific workspaces to specific capacities?</span>
+                    <span class="faq-chevron">&#9662;</span>
+                </button>
+                <div class="faq-a">
+                    <p>Yes &mdash; this is a core Fabric governance mechanism. Each workspace is assigned to exactly one capacity at a time. You can reassign workspaces between capacities through the Admin Portal, REST APIs, or programmatically. This is the primary mechanism for <strong>workload isolation</strong>: put your Power BI production workspaces on Capacity A, your data engineering workspaces on Capacity B, and your dev/test workspaces on a smaller PAYG capacity you pause overnight. Workspace-to-capacity assignment is also how you implement cost attribution and chargeback across business units, since all CU consumption for a workspace is billed to its assigned capacity.</p>
+                    <span class="faq-source">Source: <a href="https://learn.microsoft.com/fabric/enterprise/capacity-planning-manage-capacity-growth-governance" target="_blank">Manage Capacity Growth &amp; Governance &mdash; MS Learn</a></span>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-q" onclick="toggleFaq(this)">
+                    <span>We&rsquo;re currently on Power BI Premium (P-SKU) &mdash; should we migrate to Fabric?</span>
+                    <span class="faq-chevron">&#9662;</span>
+                </button>
+                <div class="faq-a">
+                    <p>P-SKUs (P1, P2, P3, P4, P5) are discontinued and are no longer available for new purchase as of January 2025. Existing customers should plan to migrate to equivalent F-SKUs at their next renewal. The key advantages of F-SKUs: <strong>pause and resume</strong> (P-SKUs cannot pause), <strong>ARM/Terraform support</strong> for Infrastructure as Code, <strong>managed private endpoints</strong> for network security, <strong>on-demand resizing</strong>, and access to the full Fabric platform (Spark, Warehouse, Lakehouse). The CU equivalency is: P1 = F64, P2 = F128, P3 = F256, P4 = F512, P5 = F1024. Validate any automation scripts that reference P-SKU APIs and plan your commitment pricing to avoid double-billing during transition. Section 6 has the full equivalency table.</p>
+                    <span class="faq-source">Sources: <a href="https://learn.microsoft.com/fabric/enterprise/licenses" target="_blank">Fabric Licences &mdash; MS Learn</a> &middot; <a href="https://learn.microsoft.com/power-bi/enterprise/service-premium-what-is" target="_blank">Power BI Premium Retirement &mdash; MS Learn</a></span>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-q" onclick="toggleFaq(this)">
+                    <span>How does Fabric handle data residency and compliance?</span>
+                    <span class="faq-chevron">&#9662;</span>
+                </button>
+                <div class="faq-a">
+                    <p>Each Fabric capacity is provisioned in a <strong>specific Azure region</strong> (e.g., UK South, West Europe, East US 2). All compute and OneLake storage for workspaces on that capacity stays within that region. For multi-region organisations, you provision separate capacities per region. Users can access reports from any region without data physically moving across boundaries. Customer-Managed Keys (CMK) and Managed Private Endpoints are available on F-SKUs for encryption at rest and network isolation respectively. For GDPR, HIPAA, or financial regulatory requirements, this regional isolation combined with Purview integration for data governance is typically sufficient. Always consult your compliance team for specific regulatory frameworks.</p>
+                    <span class="faq-source">Sources: <a href="https://learn.microsoft.com/fabric/security/security-overview" target="_blank">Fabric Security Overview &mdash; MS Learn</a> &middot; <a href="https://learn.microsoft.com/fabric/enterprise/fabric-features" target="_blank">Fabric Features by SKU &mdash; MS Learn</a></span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- FAQ: Cost & Commercial -->
+    <div class="card">
+        <div class="card-title">Cost &amp; Commercial Planning</div>
+        <div class="faq-list">
+
+            <div class="faq-item">
+                <button class="faq-q" onclick="toggleFaq(this)">
+                    <span>Is OneLake storage included in my capacity SKU or billed separately?</span>
+                    <span class="faq-chevron">&#9662;</span>
+                </button>
+                <div class="faq-a">
+                    <p><strong>Billed separately.</strong> Your F-SKU covers compute (CUs) only. OneLake storage is charged at approximately $0.023/GB/month, though this varies by region. There is no minimum commitment for storage. OneLake <em>transactions</em> (reads/writes) do consume CUs from your capacity, but the storage itself is a separate line item on your Azure bill. For most organisations, storage costs are a small fraction of the total Fabric spend &mdash; but at large data volumes it should be budgeted explicitly. The TCO Calculator in Section 3 includes this as a configurable input.</p>
+                    <span class="faq-source">Sources: <a href="https://learn.microsoft.com/fabric/onelake/onelake-capacity-consumption" target="_blank">OneLake Capacity Consumption &mdash; MS Learn</a> &middot; <a href="https://azure.microsoft.com/pricing/details/microsoft-fabric/" target="_blank">Microsoft Fabric Pricing &mdash; Azure</a></span>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-q" onclick="toggleFaq(this)">
+                    <span>Can I use Fabric with an Enterprise Agreement (EA) or CSP?</span>
+                    <span class="faq-chevron">&#9662;</span>
+                </button>
+                <div class="faq-a">
+                    <p>Yes. Fabric F-SKUs are standard Azure resources, so they work with all Azure purchasing channels: <strong>Enterprise Agreement (EA)</strong>, <strong>Cloud Solution Provider (CSP)</strong>, <strong>Microsoft Customer Agreement (MCA)</strong>, and <strong>PAYG credit card</strong>. EA customers may receive additional negotiated discounts beyond published reservation rates. Fabric Reservations (1-year commitments) are purchased through the Azure portal and are applied before general Azure Savings Plans due to their specificity. The TCO Calculator in this accelerator uses published list prices &mdash; your actual costs may be lower under an EA. Work with your Microsoft account team or CSP partner for exact pricing.</p>
+                    <span class="faq-source">Sources: <a href="https://learn.microsoft.com/fabric/enterprise/buy-subscription" target="_blank">Buy a Fabric Subscription &mdash; MS Learn</a> &middot; <a href="https://azure.microsoft.com/pricing/details/microsoft-fabric/" target="_blank">Microsoft Fabric Pricing &mdash; Azure</a></span>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-q" onclick="toggleFaq(this)">
+                    <span>What does a realistic first-year Fabric budget look like?</span>
+                    <span class="faq-chevron">&#9662;</span>
+                </button>
+                <div class="faq-a">
+                    <p>It varies enormously by region, SKU, and commitment type, but here&rsquo;s a framework. For a mid-size deployment (F64, 50 creators, 300 viewers, 500 GB OneLake): <strong>Capacity:</strong> approximately $5,000&ndash;$8,400/month (depending on PAYG vs 1-year reserved and runtime hours). <strong>Creator licences:</strong> $700/month (50 &times; $14 Power BI Pro, as of April 2025 pricing). <strong>Viewer licences:</strong> $0 on F64+ (free Fabric licences for viewers). <strong>Storage:</strong> ~$11.50/month (500 GB &times; $0.023). <strong>Total:</strong> roughly $5,700&ndash;$9,100/month. Use the TCO Calculator in Section 3 with your actual numbers and regional pricing &mdash; the biggest variables are commitment type and whether you run 24/7 or pause outside hours.</p>
+                    <span class="faq-source">Sources: <a href="https://azure.microsoft.com/pricing/details/microsoft-fabric/" target="_blank">Microsoft Fabric Pricing &mdash; Azure</a> &middot; <a href="https://www.microsoft.com/en-us/power-platform/products/power-bi/pricing" target="_blank">Power BI Pricing &mdash; Microsoft</a></span>
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <button class="faq-q" onclick="toggleFaq(this)">
+                    <span>Can I trial Fabric before committing to a paid SKU?</span>
+                    <span class="faq-chevron">&#9662;</span>
+                </button>
+                <div class="faq-a">
+                    <p>Yes. Microsoft offers a <strong>60-day Fabric Trial</strong> that starts as an F4 capacity by default, but eligible users can upgrade to F64 during the trial period. The trial includes up to 1 TB of OneLake storage. It&rsquo;s tied to a user, not an organisation, and includes most Fabric workloads. Note that Copilot features, Private Link, and Trusted Workspace Access are not available in trial capacities. After 60 days, workspaces revert to shared capacity (Pro-only mode) unless you provision a paid F-SKU. <strong>Important planning note:</strong> a proof-of-concept on a trial F64 will show F64-level performance &mdash; if you then purchase a smaller F8 or F16 for production, performance will be significantly lower. Manage stakeholder expectations accordingly.</p>
+                    <span class="faq-source">Source: <a href="https://learn.microsoft.com/fabric/fundamentals/fabric-trial" target="_blank">Microsoft Fabric Trial &mdash; MS Learn</a></span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="callout-green callout" style="margin-top:8px">
+        <div class="callout-title">Still Have Questions?</div>
+        <p>This accelerator is a living document. If your question isn&rsquo;t covered here, check the <a href="https://learn.microsoft.com/fabric/" target="_blank" style="color:var(--green);font-weight:600">official Microsoft Fabric documentation</a> or use the Fabric Evaluator in Section 0 to get a personalised recommendation based on your specific situation.</p>
+    </div>
+
+    </div><!-- /section-panel faq -->
+
+</div>
+
+<footer class="footer">
+    <span><strong>SEED Thought Leadership</strong> &middot; Fabric Capacity Architecture Accelerator &middot; v2.0</span>
+    <span>Last validated: February 2026 &middot; All sources: Microsoft Learn</span>
+</footer>
+
+<script>
+function updateSmoothing(){
+    var cu=parseInt(document.getElementById('smoothSku').value),
+        jobCUH=parseFloat(document.getElementById('smoothJob').value),
+        type=document.getElementById('smoothType').value,
+        canvas=document.getElementById('smoothingCanvas'),
+        ctx=canvas.getContext('2d'),
+        dpr=window.devicePixelRatio||1,
+        rect=canvas.getBoundingClientRect();
+    canvas.width=rect.width*dpr;canvas.height=280*dpr;ctx.scale(dpr,dpr);
+    var W=rect.width,H=280;ctx.clearRect(0,0,W,H);
+    var totalCUs=jobCUH*3600,tpDay=2880,cuPerTP=cu*30;
+    var smoothWin=type==='background'?tpDay:Math.min(Math.ceil(totalCUs/cuPerTP)*2,128);
+    if(type==='interactive')smoothWin=Math.max(10,Math.min(smoothWin,128));
+    var cuSmTP=totalCUs/smoothWin,pct=(cuSmTP/cuPerTP)*100;
+    var pL=50,pR=20,pT=30,pB=50,cW=W-pL-pR,cH=H-pT-pB;
+    var maxP=Math.max(pct*1.5,5);if(maxP>100)maxP=Math.min(pct*1.5,200);
+    ctx.strokeStyle='#E8E5E1';ctx.lineWidth=1;
+    var yS=[0,25,50,75,100];if(maxP>100)yS.push(150,200);
+    yS=yS.filter(function(v){return v<=maxP});
+    ctx.font='11px Inter';ctx.fillStyle='#9B9590';ctx.textAlign='right';
+    yS.forEach(function(v){var y=pT+cH-(v/maxP)*cH;ctx.beginPath();ctx.moveTo(pL,y);ctx.lineTo(W-pR,y);ctx.stroke();ctx.fillText(v+'%',pL-8,y+4)});
+    if(maxP>100){var y1=pT+cH-(100/maxP)*cH;ctx.strokeStyle='#C0392B';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);ctx.beginPath();ctx.moveTo(pL,y1);ctx.lineTo(W-pR,y1);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#C0392B';ctx.textAlign='left';ctx.fillText('100% \u2014 Throttle threshold',pL+4,y1-6)}
+    var showTP=type==='background'?Math.min(120,tpDay):Math.min(60,smoothWin+20);
+    var bW=Math.max(2,(cW/showTP)-1);
+    for(var i=0;i<showTP;i++){var isSm=i<smoothWin,v=isSm?pct:0,bH=(v/maxP)*cH,x=pL+(i/showTP)*cW,y=pT+cH-bH;ctx.fillStyle=v>100?'rgba(192,57,43,0.6)':(isSm?'rgba(196,101,58,0.5)':'rgba(196,101,58,0.05)');ctx.fillRect(x,y,bW,bH)}
+    ctx.fillStyle='#9B9590';ctx.textAlign='center';ctx.font='11px Inter';
+    ctx.fillText(type==='background'?'Timepoints (first '+showTP+' of 2,880 over 24 hours)':'Timepoints (30 seconds each)',pL+cW/2,H-10);
+    var el=document.getElementById('smoothingStats'),t10=cuSmTP*20,c10=cuPerTP*20,p10=(t10/c10)*100;
+    el.innerHTML='<div class="stat-box"><div class="stat-number">'+totalCUs.toLocaleString()+'</div><div class="stat-label">Total CU-seconds</div></div><div class="stat-box"><div class="stat-number">'+cuSmTP.toFixed(1)+'</div><div class="stat-label">CUs per Timepoint</div></div><div class="stat-box"><div class="stat-number">'+pct.toFixed(1)+'%</div><div class="stat-label">% of Timepoint Capacity</div></div><div class="stat-box"><div class="stat-number">'+p10.toFixed(1)+'%</div><div class="stat-label">10-min Throttle Window</div></div>';
+}
+function calculateTCO(){updateTCO()}
+var SKU_MAP=[{label:'F8',cu:8},{label:'F16',cu:16},{label:'F32',cu:32}];
+var COUNTRIES=[
+    {name:'United States',region:'East US 2',cur:'$',cuRate:0.18,proRate:10,storRate:0.023,flag:'\uD83C\uDDFA\uD83C\uDDF8'},
+    {name:'United Kingdom',region:'UK South',cur:'\u00A3',cuRate:0.1584,proRate:7.90,storRate:0.02,flag:'\uD83C\uDDEC\uD83C\uDDE7'},
+    {name:'Germany',region:'West Europe',cur:'\u20AC',cuRate:0.2016,proRate:9.40,storRate:0.023,flag:'\uD83C\uDDE9\uD83C\uDDEA'},
+    {name:'Netherlands',region:'West Europe',cur:'\u20AC',cuRate:0.2016,proRate:9.40,storRate:0.023,flag:'\uD83C\uDDF3\uD83C\uDDF1'},
+    {name:'France',region:'France Central',cur:'\u20AC',cuRate:0.2016,proRate:9.40,storRate:0.023,flag:'\uD83C\uDDEB\uD83C\uDDF7'},
+    {name:'Ireland',region:'North Europe',cur:'\u20AC',cuRate:0.1764,proRate:9.40,storRate:0.02,flag:'\uD83C\uDDEE\uD83C\uDDEA'},
+    {name:'Sweden',region:'Sweden Central',cur:'\u20AC',cuRate:0.1944,proRate:9.40,storRate:0.023,flag:'\uD83C\uDDF8\uD83C\uDDEA'},
+    {name:'Switzerland',region:'Switzerland North',cur:'CHF',cuRate:0.234,proRate:12.20,storRate:0.026,flag:'\uD83C\uDDE8\uD83C\uDDED'},
+    {name:'Norway',region:'Norway East',cur:'\u20AC',cuRate:0.1944,proRate:9.40,storRate:0.023,flag:'\uD83C\uDDF3\uD83C\uDDF4'},
+    {name:'Canada',region:'Canada Central',cur:'CA$',cuRate:0.216,proRate:12.50,storRate:0.024,flag:'\uD83C\uDDE8\uD83C\uDDE6'},
+    {name:'Australia',region:'Australia East',cur:'A$',cuRate:0.252,proRate:15.10,storRate:0.027,flag:'\uD83C\uDDE6\uD83C\uDDFA'},
+    {name:'India',region:'Central India',cur:'\u20B9',cuRate:13.50,proRate:420,storRate:1.45,flag:'\uD83C\uDDEE\uD83C\uDDF3'},
+    {name:'Japan',region:'Japan East',cur:'\u00A5',cuRate:27,proRate:1500,storRate:2.75,flag:'\uD83C\uDDEF\uD83C\uDDF5'},
+    {name:'Singapore',region:'Southeast Asia',cur:'US$',cuRate:0.2196,proRate:10,storRate:0.025,flag:'\uD83C\uDDF8\uD83C\uDDEC'},
+    {name:'Brazil',region:'Brazil South',cur:'R$',cuRate:1.20,proRate:55,storRate:0.13,flag:'\uD83C\uDDE7\uD83C\uDDF7'},
+    {name:'South Africa',region:'South Africa North',cur:'R',cuRate:3.35,proRate:180,storRate:0.42,flag:'\uD83C\uDDFF\uD83C\uDDE6'},
+    {name:'UAE',region:'UAE North',cur:'$',cuRate:0.216,proRate:10,storRate:0.025,flag:'\uD83C\uDDE6\uD83C\uDDEA'},
+    {name:'South Korea',region:'Korea Central',cur:'\u20A9',cuRate:250,proRate:13200,storRate:28,flag:'\uD83C\uDDF0\uD83C\uDDF7'},
+    {name:'Qatar',region:'Qatar Central',cur:'$',cuRate:0.216,proRate:10,storRate:0.025,flag:'\uD83C\uDDF6\uD83C\uDDE6'},
+    {name:'Poland',region:'Poland Central',cur:'\u20AC',cuRate:0.198,proRate:9.40,storRate:0.023,flag:'\uD83C\uDDF5\uD83C\uDDF1'},
+    {name:'Italy',region:'Italy North',cur:'\u20AC',cuRate:0.2016,proRate:9.40,storRate:0.023,flag:'\uD83C\uDDEE\uD83C\uDDF9'},
+    {name:'Spain',region:'Spain Central',cur:'\u20AC',cuRate:0.2016,proRate:9.40,storRate:0.023,flag:'\uD83C\uDDEA\uD83C\uDDF8'}
+];
+var activeCur={sym:'$',cuRate:0.18,proRate:10,storRate:0.023};
+function filterCountries(){
+    var q=document.getElementById('countrySearch').value.toLowerCase(),dd=document.getElementById('countryDropdown');
+    var matches=q.length===0?COUNTRIES:COUNTRIES.filter(function(c){return c.name.toLowerCase().indexOf(q)>-1||c.region.toLowerCase().indexOf(q)>-1});
+    dd.style.display='block';
+    dd.innerHTML=matches.slice(0,12).map(function(c){return '<div style="padding:10px 16px;cursor:pointer;font-size:13.5px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);transition:background 0.15s" onmouseenter="this.style.background=\'var(--accent-light)\'" onmouseleave="this.style.background=\'transparent\'" onclick="selectCountry(\''+c.name+'\')"><span style="font-size:18px">'+c.flag+'</span><span><strong>'+c.name+'</strong> <span style="color:var(--text-muted);font-size:12px">&mdash; '+c.region+' ('+c.cur+')</span></span></div>'}).join('');
+    if(matches.length===0)dd.innerHTML='<div style="padding:12px 16px;font-size:13px;color:var(--text-muted)">No matching country or region found</div>';
+}
+function selectCountry(name){
+    var c=COUNTRIES.find(function(x){return x.name===name});if(!c)return;
+    activeCur={sym:c.cur,cuRate:c.cuRate,proRate:c.proRate,storRate:c.storRate};
+    document.getElementById('countrySearch').value=c.flag+' '+c.name+' \u2014 '+c.region;
+    document.getElementById('countryDropdown').style.display='none';
+    document.getElementById('countryInfo').innerHTML='Using <strong>'+c.region+'</strong> pricing: <strong>'+c.cur+c.cuRate+'/CU/hr</strong>, Pro licence: <strong>'+c.cur+c.proRate+'/user/mo</strong>, Storage: <strong>'+c.cur+c.storRate+'/GB/mo</strong>. <span style="color:var(--accent)">Rates are approximate PAYG list prices &mdash; verify on <a href="https://azure.microsoft.com/en-us/pricing/details/microsoft-fabric/" target="_blank" style="color:var(--accent)">Azure Pricing</a>.</span>';
+    // Update slider values to match
+    document.getElementById('tcoCuRate2').value=c.cuRate;
+    document.getElementById('tcoProCost2').value=c.proRate;
+    // Update slider min/max for non-USD currencies
+    var rSlider=document.getElementById('tcoCuRate2'),pSlider=document.getElementById('tcoProCost2');
+    if(c.cuRate>1){rSlider.min=Math.floor(c.cuRate*0.5);rSlider.max=Math.ceil(c.cuRate*2);rSlider.step=Math.max(0.5,Math.round(c.cuRate*0.05))}
+    else{rSlider.min=0.08;rSlider.max=0.50;rSlider.step=0.01}
+    if(c.proRate>30){pSlider.min=Math.floor(c.proRate*0.5);pSlider.max=Math.ceil(c.proRate*2);pSlider.step=Math.max(1,Math.round(c.proRate*0.05))}
+    else{pSlider.min=5;pSlider.max=25;pSlider.step=0.5}
+    updateTCO();
+}
+document.addEventListener('click',function(e){var dd=document.getElementById('countryDropdown'),s=document.getElementById('countrySearch');if(!dd.contains(e.target)&&e.target!==s)dd.style.display='none'});
+function fmtCur(v){var s=activeCur.sym;if(v>=10000)return s+Math.round(v).toLocaleString();if(v>=100)return s+Math.round(v).toLocaleString();return s+v.toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}
+function updateTCO(){
+    var si=parseInt(document.getElementById('tcoSku').value),sd=SKU_MAP[si],
+        viewers=parseInt(document.getElementById('tcoViewers2').value),
+        creators=parseInt(document.getElementById('tcoCreators').value),
+        proCost=parseFloat(document.getElementById('tcoProCost2').value),
+        cuRate=parseFloat(document.getElementById('tcoCuRate2').value),
+        hours=parseInt(document.getElementById('tcoHours').value),
+        disc=parseInt(document.getElementById('tcoDiscount').value),
+        storGB=parseInt(document.getElementById('tcoStorage').value);
+    var s=activeCur.sym;
+    document.getElementById('tcoSkuVal').textContent=sd.label;
+    document.getElementById('tcoViewersVal').textContent=viewers;
+    document.getElementById('tcoCreatorsVal').textContent=creators;
+    document.getElementById('tcoProVal').textContent=s+proCost+'/mo';
+    document.getElementById('tcoCuVal').textContent=s+cuRate+'/hr';
+    document.getElementById('tcoHoursVal').textContent=hours+'h';
+    document.getElementById('tcoDiscVal').textContent=disc+'%';
+    document.getElementById('tcoStorVal').textContent=storGB.toLocaleString()+' GB';
+    document.querySelectorAll('.slider-track input[type=range]').forEach(function(sl){var pct=((sl.value-sl.min)/(sl.max-sl.min))*100;sl.style.background='linear-gradient(to right,var(--accent) '+pct+'%,var(--border) '+pct+'%)'});
+    var dpm=30.44,hpm=hours*dpm,dm=1-(disc/100),stCost=storGB*activeCur.storRate;
+    var capA=sd.cu*cuRate*hpm*dm,vlA=viewers*proCost,clA=creators*proCost,stA=stCost,totA=capA+vlA+clA+stA;
+    var capB=64*cuRate*hpm*dm,vlB=0,clB=creators*proCost,stB=stCost,totB=capB+vlB+clB+stB;
+    var sav=totA-totB,win=totB<totA,be=Math.ceil((capB-capA)/proCost);
+    var h='<div class="tco-result">'+
+      '<div class="tco-box option-a"><div class="tco-label">Option A: '+sd.label+' + Pro Licences</div>'+
+      '<div class="tco-amount" style="color:var(--orange)">'+fmtCur(totA)+'/mo</div>'+
+      '<div class="tco-breakdown"><div class="tco-breakdown-title">Monthly Breakdown</div>'+
+      '<div class="tco-line"><span class="tco-line-label">'+sd.label+' capacity ('+hours+'h/day'+(disc>0?', '+disc+'% disc':'')+')</span><span class="tco-line-value">'+fmtCur(capA)+'</span></div>'+
+      '<div class="tco-line"><span class="tco-line-label">Viewer Pro licences ('+viewers+' users)</span><span class="tco-line-value">'+fmtCur(vlA)+'</span></div>'+
+      '<div class="tco-line"><span class="tco-line-label">Creator Pro licences ('+creators+' users)</span><span class="tco-line-value">'+fmtCur(clA)+'</span></div>'+
+      '<div class="tco-line"><span class="tco-line-label">OneLake storage ('+storGB.toLocaleString()+' GB)</span><span class="tco-line-value">'+fmtCur(stA)+'</span></div>'+
+      '<div class="tco-line"><span class="tco-line-label">Total</span><span class="tco-line-value" style="color:var(--orange)">'+fmtCur(totA)+'</span></div></div></div>'+
+      '<div class="tco-box option-b"><div class="tco-label">Option B: F64 (Free Viewers)</div>'+
+      '<div class="tco-amount" style="color:var(--green)">'+fmtCur(totB)+'/mo</div>'+
+      '<div class="tco-breakdown"><div class="tco-breakdown-title">Monthly Breakdown</div>'+
+      '<div class="tco-line"><span class="tco-line-label">F64 capacity ('+hours+'h/day'+(disc>0?', '+disc+'% disc':'')+')</span><span class="tco-line-value">'+fmtCur(capB)+'</span></div>'+
+      '<div class="tco-line"><span class="tco-line-label">Viewer licences</span><span class="tco-line-value" style="color:var(--green)">'+s+'0 (free)</span></div>'+
+      '<div class="tco-line"><span class="tco-line-label">Creator Pro licences ('+creators+' users)</span><span class="tco-line-value">'+fmtCur(clB)+'</span></div>'+
+      '<div class="tco-line"><span class="tco-line-label">OneLake storage ('+storGB.toLocaleString()+' GB)</span><span class="tco-line-value">'+fmtCur(stB)+'</span></div>'+
+      '<div class="tco-line"><span class="tco-line-label">Total</span><span class="tco-line-value" style="color:var(--green)">'+fmtCur(totB)+'</span></div></div></div></div>';
+    if(win)h+='<div class="tco-winner" style="background:var(--green-bg);color:var(--green)">\u2705 F64 saves <strong>'+fmtCur(Math.abs(sav))+'/month</strong> ('+fmtCur(Math.abs(sav)*12)+'/year) \u2014 plus unlocks Unlimited Direct Lake model size, native Copilot, and 5,000 parquet files per table.</div>';
+    else h+='<div class="tco-winner" style="background:var(--orange-bg);color:var(--orange)">\u26A0\uFE0F '+sd.label+' + Pro is <strong>'+fmtCur(Math.abs(sav))+'/month cheaper</strong>. Break-even: <strong>'+be+' viewers</strong>. However, consider the Direct Lake guardrail uplift, Copilot, and Unlimited model size at F64.</div>';
+    document.getElementById('tcoResults2').innerHTML=h;
+}
+function buildVCoreChart(){
+    var skus=[{s:'F2',b:4,x:20},{s:'F4',b:8,x:24},{s:'F8',b:16,x:48},{s:'F16',b:32,x:96},{s:'F32',b:64,x:192},{s:'F64',b:128,x:384},{s:'F128',b:256,x:768},{s:'F256',b:512,x:1536}];
+    var h='';skus.forEach(function(d){var bp=(d.b/1536)*100,xp=(d.x/1536)*100;bp=Math.min(bp,100);xp=Math.min(xp,100);
+    h+='<div class="vcore-row"><div class="vcore-sku">'+d.s+'</div><div class="vcore-bar-track"><div class="vcore-bar-burst" style="width:'+xp+'%"></div><div class="vcore-bar-base" style="width:'+bp+'%"></div></div><div class="vcore-values">'+d.b+' \u2192 <span>'+d.x+'</span> VCores</div></div>'});
+    h+='<div style="display:flex;gap:20px;margin-top:12px;font-size:12px;color:var(--text-muted)"><span><span style="display:inline-block;width:14px;height:14px;background:var(--accent);opacity:0.85;border-radius:3px;vertical-align:middle;margin-right:4px"></span> Base VCores</span><span><span style="display:inline-block;width:14px;height:14px;background:repeating-linear-gradient(-45deg,rgba(196,101,58,0.25),rgba(196,101,58,0.25) 3px,rgba(196,101,58,0.1) 3px,rgba(196,101,58,0.1) 6px);border-radius:3px;vertical-align:middle;margin-right:4px"></span> Burst VCores (3\u00D7)</span></div>';
+    document.getElementById('vcoreChart').innerHTML=h;
+}
+/* ═══════════ FAQ ACCORDION ═══════════ */
+function toggleFaq(btn){
+    var item=btn.parentElement;
+    var answer=item.querySelector('.faq-a');
+    var isOpen=btn.classList.contains('open');
+    // Close all others in the same card
+    var card=item.closest('.faq-list');
+    card.querySelectorAll('.faq-q.open').forEach(function(q){
+        q.classList.remove('open');
+        q.parentElement.querySelector('.faq-a').classList.remove('open');
+    });
+    // Toggle this one (if it wasn't already open)
+    if(!isOpen){
+        btn.classList.add('open');
+        answer.classList.add('open');
+    }
+}
+
+function setupNav(){
+    // Tab mode: show first panel (evaluator) by default
+    switchTab('evaluator', document.querySelector('.nav-btn[data-target="evaluator"]'));
+}
+function switchTab(sectionId, btn){
+    var container=document.querySelector('.container');
+    // Exit view-all mode if active
+    container.classList.remove('view-all');
+    var vaBtn=document.querySelector('.nav-btn-viewall');
+    if(vaBtn)vaBtn.classList.remove('active');
+    // Hide all panels, show target
+    document.querySelectorAll('.section-panel').forEach(function(p){p.classList.remove('active')});
+    var target=document.querySelector('.section-panel[data-section="'+sectionId+'"]');
+    if(target)target.classList.add('active');
+    // Update button states
+    document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active')});
+    if(btn)btn.classList.add('active');
+    // Scroll nav into view smoothly
+    var navRow=document.getElementById('navTabs');
+    if(navRow){
+        var navBottom=navRow.getBoundingClientRect().bottom;
+        if(navBottom<0)navRow.scrollIntoView({behavior:'smooth',block:'start'});
+    }
+    // Re-trigger animations on canvases within the new panel (e.g. charts)
+    if(sectionId==='cu-economy')try{buildVCoreChart()}catch(e){}
+    // Update journey breadcrumb highlight
+    updateJourneyHighlight();
+}
+function toggleViewAll(btn){
+    var container=document.querySelector('.container');
+    var isAll=container.classList.toggle('view-all');
+    // Toggle button state
+    btn.classList.toggle('active', isAll);
+    if(isAll){
+        // Deactivate all individual tab buttons
+        document.querySelectorAll('.nav-btn:not(.nav-btn-viewall)').forEach(function(b){b.classList.remove('active')});
+    } else {
+        // Return to first tab
+        switchTab('evaluator', document.querySelector('.nav-btn[data-target="evaluator"]'));
+    }
+}
+// Allow roadmap cards and evaluator section links to switch tabs
+document.addEventListener('click',function(e){
+    var link=e.target.closest('a[href^="#"]');
+    if(!link)return;
+    var id=link.getAttribute('href').slice(1);
+    var panel=document.querySelector('.section-panel[data-section="'+id+'"]');
+    if(panel){
+        e.preventDefault();
+        var btn=document.querySelector('.nav-btn[data-target="'+id+'"]');
+        switchTab(id, btn);
+    }
+});
+/* ═══════════ EVALUATOR ENGINE ═══════════ */
+var EVAL_SEGMENTS=['Current Data Landscape','Analytics Maturity','Scale & Licensing','Governance & Architecture'];
+var EVAL_QS=[
+    // Segment 0: Current Data Landscape
+    {q:'Where does your primary analytical data live today?',opts:[
+        {t:'Excel, SharePoint, or flat files',b:0,s:0},{t:'SQL Server on-premises',b:1,s:0},{t:'Azure SQL / Azure Synapse',b:2,s:1},
+        {t:'Cloud data warehouse (Snowflake, Databricks, BigQuery, Redshift)',b:3,s:2},{t:'Data Lake (ADLS, S3, OneLake, Delta Lake)',b:3,s:2},
+        {t:'SaaS platforms / APIs (Salesforce, SAP, Dynamics, Oracle, ServiceNow)',b:2,s:1},{t:'Multiple platforms across cloud and on-prem',b:3,s:3}
+    ]},
+    {q:'How many distinct data sources feed your analytics?',opts:[
+        {t:'1\u20133 sources',b:0,s:0},{t:'4\u201310 sources',b:1,s:1},{t:'11\u201325 sources',b:2,s:2},{t:'25+ sources',b:3,s:3}
+    ]},
+    {q:'Do you currently perform ETL or data transformation before it reaches Power BI?',opts:[
+        {t:'No \u2014 data goes straight into Power BI',b:0,s:0},{t:'Yes, using Power Query only',b:1,s:0},
+        {t:'Yes, using SSIS, ADF, or other ETL tools',b:2,s:1},{t:'Yes, using Spark, Databricks, or Python scripts',b:3,s:3}
+    ]},
+    {q:'How much data do your largest analytical datasets contain?',opts:[
+        {t:'Less than 1 million rows',b:0,s:0},{t:'1\u201350 million rows',b:1,s:1},
+        {t:'50\u2013500 million rows',b:2,s:2},{t:'500 million+ rows',b:3,s:3}
+    ]},
+    {q:'Do you need real-time or near-real-time data in your reports?',opts:[
+        {t:'No \u2014 daily refreshes are fine',b:0,s:0},{t:'Nice to have but not critical',b:1,s:1},
+        {t:'Yes, data within minutes',b:2,s:2},{t:'Yes, sub-second streaming',b:3,s:3}
+    ]},
+    // Segment 1: Analytics Maturity
+    {q:'What does your organisation primarily use Power BI for today?',opts:[
+        {t:'Static dashboards shared via email/links',b:0,s:0},{t:'Interactive self-service analytics',b:1,s:1},
+        {t:'Embedded analytics in applications',b:2,s:2},{t:'Paginated operational reports',b:1,s:1},{t:'All of the above',b:3,s:3}
+    ]},
+    {q:'Do any teams use Python, R, Spark, or notebooks for data work?',opts:[
+        {t:'No \u2014 all our work is in Power BI and SQL',b:0,s:0},{t:'Experimenting / a few individuals',b:1,s:1},
+        {t:'Yes, a few teams use them regularly',b:2,s:2},{t:'Yes, it\u2019s core to our data workflow',b:3,s:3}
+    ]},
+    {q:'Do you need a data warehouse or lakehouse beyond what Power BI import models provide?',opts:[
+        {t:'No \u2014 Power BI Import mode is sufficient',b:0,s:0},{t:'Considering it for the future',b:1,s:1},
+        {t:'Yes, we already have one in another platform',b:2,s:2},{t:'Yes, we want to consolidate into Fabric',b:3,s:3}
+    ]},
+    {q:'Do you use or plan to use machine learning or AI models in production?',opts:[
+        {t:'No \u2014 not on our roadmap',b:0,s:0},{t:'Exploring / proof of concept',b:1,s:1},
+        {t:'Yes, running in another platform (Databricks, SageMaker, etc.)',b:2,s:2},{t:'Yes, want to run them in Fabric',b:3,s:3}
+    ]},
+    {q:'Do you need data alerts or actions triggered automatically by data conditions?',opts:[
+        {t:'No \u2014 we review dashboards manually',b:0,s:0},{t:'Occasionally \u2014 some email alerts',b:1,s:1},
+        {t:'Yes \u2014 operationally critical alerting',b:3,s:2}
+    ]},
+    // Segment 2: Scale & Licensing
+    {q:'How many Power BI report viewers does your organisation have?',opts:[
+        {t:'Fewer than 50',b:0,s:0},{t:'50\u2013150',b:1,s:1},{t:'150\u2013500',b:2,s:2},{t:'500+',b:3,s:3}
+    ]},
+    {q:'How many Power BI report creators or developers do you have?',opts:[
+        {t:'Fewer than 5',b:0,s:0},{t:'5\u201320',b:1,s:1},{t:'20\u201350',b:2,s:2},{t:'50+',b:3,s:3}
+    ]},
+    {q:'What is your current Power BI licensing model?',opts:[
+        {t:'Pro licences only',b:0,s:0},{t:'Premium Per User (PPU)',b:1,s:1},
+        {t:'Premium P-SKU capacity',b:2,s:2},{t:'Fabric F-SKU already',b:3,s:3},{t:'Trial or evaluation',b:1,s:0}
+    ]},
+    {q:'How do you expect your data and analytics usage to grow over the next 2 years?',opts:[
+        {t:'Stable \u2014 minimal change',b:0,s:0},{t:'Moderate growth (10\u201325%)',b:1,s:1},
+        {t:'Significant growth (25\u201350%)',b:2,s:2},{t:'Rapid scaling (50%+)',b:3,s:3}
+    ]},
+    {q:'Is cost predictability or cost minimisation more important to your organisation?',opts:[
+        {t:'Predictability \u2014 fixed monthly spend',b:1,s:2},{t:'Minimisation \u2014 pay only for what we use',b:1,s:1},
+        {t:'Both equally important',b:2,s:2}
+    ]},
+    // Segment 3: Governance & Architecture
+    {q:'How many distinct teams or departments will use the analytics platform?',opts:[
+        {t:'1 team',b:0,s:0},{t:'2\u20135 teams',b:1,s:1},{t:'6\u201315 teams',b:2,s:2},{t:'Enterprise-wide (15+)',b:3,s:3}
+    ]},
+    {q:'Do you require deployment pipelines (dev/test/prod) for analytics content?',opts:[
+        {t:'No \u2014 we publish directly to production',b:0,s:0},{t:'Want to start implementing them',b:1,s:1},
+        {t:'Yes, using Power BI deployment pipelines',b:2,s:2},{t:'Yes, using Azure DevOps or Git-based CI/CD',b:3,s:3}
+    ]},
+    {q:'What level of data governance does your organisation require?',opts:[
+        {t:'Basic \u2014 we trust the data team',b:0,s:0},{t:'Standard \u2014 documented access controls',b:1,s:1},
+        {t:'Regulated \u2014 audit trails, GDPR compliance',b:2,s:2},{t:'Highly regulated \u2014 financial services, healthcare',b:3,s:3}
+    ]},
+    {q:'Do you need to isolate compute between workloads (e.g., ETL shouldn\u2019t slow down reports)?',opts:[
+        {t:'Not a concern for us',b:0,s:0},{t:'Would be nice but not critical',b:1,s:1},
+        {t:'Yes \u2014 critical requirement',b:3,s:3}
+    ]},
+    {q:'Does your organisation have a data mesh, data lakehouse, or medallion architecture strategy?',opts:[
+        {t:'No \u2014 not applicable to us',b:0,s:0},{t:'Planning one for the future',b:1,s:1},
+        {t:'Already implementing',b:2,s:2},{t:'Already mature and operational',b:3,s:3}
+    ]}
+];
+var EVAL_PROFILES=[
+    {id:'pro',name:'Power BI Pro / PPU',badge:'var(--grey-badge)',badgeBg:'var(--grey-badge-bg)',
+     desc:'Your organisation is well-served by Power BI Pro or Premium Per User (PPU) licences. You don\u2019t need Fabric capacity today. Your data landscape is straightforward, your analytics are BI-focused, and your scale doesn\u2019t justify the F-SKU investment. Revisit this evaluator in 12 months as your needs evolve.',
+     sections:[{t:'3 F64 Decision (future ref)',h:'#f64-decision'},{t:'6 SKU Reference',h:'#sku-reference'}],
+     recs:{start:'No capacity purchase needed',arch:'Power BI Service (cloud)',key:'Monitor viewer count \u2014 the F64 cliff matters when you cross ~130 viewers'}},
+    {id:'pbi-fabric',name:'Power BI on Fabric',badge:'var(--layer-azure)',badgeBg:'rgba(0,120,212,0.1)',
+     desc:'You need Fabric capacity, but primarily for the licensing economics and Direct Lake capabilities \u2014 not for data engineering workloads. Your use case is Power BI at scale: enough viewers to justify F64, large enough models to benefit from Direct Lake guardrail upgrades, or a need for Copilot integration.',
+     sections:[{t:'1 Architecture',h:'#architecture'},{t:'3 F64 Decision',h:'#f64-decision'},{t:'6 SKU Reference',h:'#sku-reference'}],
+     recs:{start:'F64 or higher',arch:'Power BI + OneLake (Direct Lake mode)',key:'Run the TCO Calculator in 3 to validate the break-even point'}},
+    {id:'essentials',name:'Fabric Essentials',badge:'var(--layer-workspace)',badgeBg:'rgba(91,140,90,0.1)',
+     desc:'You need Fabric beyond just Power BI, but your workloads are focused on 1\u20132 additional capabilities \u2014 likely Dataflows Gen2, a basic Lakehouse, or Data Pipelines. You\u2019re not running heavy Spark workloads or building a full medallion architecture yet, but you\u2019re outgrowing pure Power BI.',
+     sections:[{t:'1 Architecture',h:'#architecture'},{t:'2 CU Economy',h:'#cu-economy'},{t:'3 F64 Decision',h:'#f64-decision'},{t:'5 Workload Map',h:'#cross-workload'}],
+     recs:{start:'F32\u2013F64 depending on viewers',arch:'Power BI + Lakehouse + Dataflows Gen2',key:'Understand CU smoothing in 2 \u2014 your mixed workloads will share the pool'}},
+    {id:'platform',name:'Fabric Platform',badge:'var(--accent)',badgeBg:'var(--accent-light)',
+     desc:'You need the full unified Fabric platform \u2014 Spark notebooks, Warehouse or Lakehouse, Power BI, and potentially Real-Time Intelligence. Your data landscape is complex, your analytics maturity is high, and you\u2019re building (or migrating to) an enterprise-scale data platform.',
+     sections:[{t:'1 Architecture',h:'#architecture'},{t:'2 CU Economy',h:'#cu-economy'},{t:'3 F64 Decision',h:'#f64-decision'},{t:'4 Spark',h:'#spark-burst'},{t:'5 Workloads',h:'#cross-workload'},{t:'6 SKU Ref',h:'#sku-reference'}],
+     recs:{start:'F64+ (likely F128 for production)',arch:'Full Fabric: Lakehouse + Warehouse + Spark + Power BI',key:'Read every section \u2014 start with Architecture, focus on CU contention in 5'}},
+    {id:'platform-auto',name:'Fabric Platform + Autoscale',badge:'var(--dark)',badgeBg:'rgba(45,43,40,0.08)',
+     desc:'You need the full Fabric platform AND your data engineering workloads are heavy enough to warrant compute isolation. Spark Autoscale Billing should be evaluated to prevent your ETL jobs from competing with Power BI for CU budget. Consider multi-capacity architecture patterns for enterprise governance.',
+     sections:[{t:'1 Architecture',h:'#architecture'},{t:'2 CU Economy',h:'#cu-economy'},{t:'3 F64 Decision',h:'#f64-decision'},{t:'4 Spark &amp; Autoscale',h:'#spark-burst'},{t:'5 Workloads',h:'#cross-workload'},{t:'6 SKU Ref',h:'#sku-reference'}],
+     recs:{start:'F128+ with Spark Autoscale Billing',arch:'Multi-capacity: dedicated Spark + dedicated BI capacity',key:'4 Spark Burst & Autoscale is your most critical section'}}
+];
+var evalState={current:0,answers:new Array(20).fill(-1)};
+function evalSegIdx(qi){return qi<5?0:qi<10?1:qi<15?2:3}
+function renderEvalProgress(){
+    var h='';EVAL_SEGMENTS.forEach(function(seg,si){
+        var start=si*5,end=start+5,cls='';
+        var allDone=true,anyActive=false;
+        for(var i=start;i<end;i++){if(evalState.answers[i]===-1)allDone=false;if(i===evalState.current)anyActive=true}
+        h+='<div class="eval-prog-seg">';
+        for(var i=start;i<end;i++){
+            var c='eval-prog-bar';
+            if(evalState.answers[i]>-1)c+=' done';
+            else if(i===evalState.current)c+=' active';
+            h+='<div class="'+c+'"></div>';
+        }
+        h+='<div class="eval-prog-label'+(anyActive?' active':'')+(allDone?' done':'')+'">'+seg+'</div></div>';
+    });
+    document.getElementById('evalProgress').innerHTML=h;
+}
+function renderEvalQuestion(){
+    var qi=evalState.current,q=EVAL_QS[qi],segI=evalSegIdx(qi),localI=qi-(segI*5)+1;
+    var h='<div class="eval-question-counter">Segment '+(segI+1)+' of 4 &mdash; Question '+localI+' of 5 &mdash; <strong>'+EVAL_SEGMENTS[segI]+'</strong></div>';
+    h+='<div class="eval-question">'+q.q+'</div>';
+    h+='<div class="eval-options">';
+    q.opts.forEach(function(o,oi){
+        h+='<div class="eval-opt'+(evalState.answers[qi]===oi?' selected':'')+'" onclick="evalSelect('+qi+','+oi+')">';
+        h+='<div class="eval-opt-radio"></div><div>'+o.t+'</div></div>';
+    });
+    h+='</div>';
+    h+='<div class="eval-nav">';
+    if(qi>0)h+='<button class="eval-btn eval-btn-back" onclick="evalBack()">Back</button>';
+    else h+='<div></div>';
+    h+='<div class="eval-step-label">'+(qi+1)+' / 20</div>';
+    if(qi<19)h+='<button class="eval-btn eval-btn-next" id="evalNext" onclick="evalNext()"'+(evalState.answers[qi]===-1?' disabled':'')+'>Next</button>';
+    else h+='<button class="eval-btn eval-btn-next" id="evalNext" onclick="evalShowResults()"'+(evalState.answers[qi]===-1?' disabled':'')+'>See My Fabric Profile</button>';
+    h+='</div>';
+    document.getElementById('evalBody').innerHTML=h;
+    renderEvalProgress();
+}
+function evalSelect(qi,oi){evalState.answers[qi]=oi;renderEvalQuestion()}
+function evalNext(){if(evalState.answers[evalState.current]>-1&&evalState.current<19){evalState.current++;renderEvalQuestion()}}
+function evalBack(){if(evalState.current>0){evalState.current--;renderEvalQuestion()}}
+function evalCalcScores(){
+    var segs=[0,0,0,0],maxSegs=[0,0,0,0];
+    EVAL_QS.forEach(function(q,qi){
+        var si=evalSegIdx(qi),ai=evalState.answers[qi];
+        var maxB=0;q.opts.forEach(function(o){if(o.b>maxB)maxB=o.b});
+        maxSegs[si]+=maxB;
+        if(ai>-1)segs[si]+=q.opts[ai].b;
+    });
+    var pcts=segs.map(function(v,i){return maxSegs[i]>0?Math.round((v/maxSegs[i])*100):0});
+    var breadth=Math.round((pcts[0]+pcts[1])/2),scale=Math.round((pcts[2]+pcts[3])/2),total=Math.round((breadth+scale)/2);
+    // Determine profile
+    var pi=0;
+    if(breadth<25&&scale<30)pi=0; // Pro/PPU
+    else if(breadth<35&&scale>=30)pi=1; // PBI on Fabric
+    else if(breadth<55&&total<50)pi=2; // Essentials
+    else if(total>=65&&pcts[1]>=60)pi=4; // Platform+Autoscale
+    else if(breadth>=35||total>=45)pi=3; // Platform
+    return{segs:pcts,breadth:breadth,scale:scale,total:total,profile:pi};
+}
+function evalDrawRadar(segs){
+    var c=document.getElementById('evalRadar'),ctx=c.getContext('2d'),dpr=window.devicePixelRatio||1;
+    c.width=320*dpr;c.height=320*dpr;ctx.scale(dpr,dpr);
+    var cx=160,cy=160,r=120,labels=EVAL_SEGMENTS,vals=segs.map(function(v){return v/100});
+    var n=4,step=Math.PI*2/n,off=-Math.PI/2;
+    // Grid
+    [0.25,0.5,0.75,1].forEach(function(s){
+        ctx.beginPath();
+        for(var i=0;i<=n;i++){var a=off+i*step;ctx.lineTo(cx+Math.cos(a)*r*s,cy+Math.sin(a)*r*s)}
+        ctx.closePath();ctx.strokeStyle='#E8E5E1';ctx.lineWidth=1;ctx.stroke();
+    });
+    // Axes
+    for(var i=0;i<n;i++){var a=off+i*step;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);ctx.strokeStyle='#E8E5E1';ctx.stroke()}
+    // Data
+    ctx.beginPath();
+    for(var i=0;i<=n;i++){var idx=i%n,a=off+idx*step,v=Math.max(vals[idx],0.05);ctx.lineTo(cx+Math.cos(a)*r*v,cy+Math.sin(a)*r*v)}
+    ctx.closePath();ctx.fillStyle='rgba(196,101,58,0.15)';ctx.fill();ctx.strokeStyle='#C4653A';ctx.lineWidth=2.5;ctx.stroke();
+    // Points
+    for(var i=0;i<n;i++){var a=off+i*step,v=Math.max(vals[i],0.05);ctx.beginPath();ctx.arc(cx+Math.cos(a)*r*v,cy+Math.sin(a)*r*v,5,0,Math.PI*2);ctx.fillStyle='#C4653A';ctx.fill();ctx.strokeStyle='white';ctx.lineWidth=2;ctx.stroke()}
+    // Labels
+    ctx.font='600 11px Inter';ctx.fillStyle='#6B6560';ctx.textAlign='center';
+    var lpos=[{x:cx,y:cy-r-14},{x:cx+r+10,y:cy+4},{x:cx,y:cy+r+18},{x:cx-r-10,y:cy+4}];
+    lpos.forEach(function(p,i){
+        if(i===1)ctx.textAlign='left';else if(i===3)ctx.textAlign='right';else ctx.textAlign='center';
+        ctx.fillText(labels[i],p.x,p.y);
+        ctx.font='700 12px Inter';ctx.fillStyle='#C4653A';
+        ctx.fillText(segs[i]+'%',p.x,p.y+14);
+        ctx.font='600 11px Inter';ctx.fillStyle='#6B6560';
+    });
+}
+function evalShowResults(){
+    var res=evalCalcScores(),p=EVAL_PROFILES[res.profile];
+    var h='<div class="eval-result">';
+    h+='<div class="eval-profile-badge" style="background:'+p.badgeBg+';color:'+p.badge+'">Your Fabric Profile</div>';
+    h+='<div class="eval-profile-name">'+p.name+'</div>';
+    h+='<div class="eval-profile-desc">'+p.desc+'</div>';
+    h+='<div class="eval-scores-grid">';
+    EVAL_SEGMENTS.forEach(function(s,i){h+='<div class="eval-score-item"><div class="score-val">'+res.segs[i]+'%</div><div class="score-lab">'+s+'</div></div>'});
+    h+='</div>';
+    h+='<div class="eval-radar-wrap"><canvas id="evalRadar" width="320" height="320"></canvas></div>';
+    h+='<div class="eval-recs">';
+    h+='<div class="eval-rec-card"><div class="eval-rec-title">Recommended Starting Point</div><div class="eval-rec-value">'+p.recs.start+'</div></div>';
+    h+='<div class="eval-rec-card"><div class="eval-rec-title">Suggested Architecture</div><div class="eval-rec-value">'+p.recs.arch+'</div></div>';
+    h+='<div class="eval-rec-card" style="grid-column:1/-1"><div class="eval-rec-title">Key Decision</div><div class="eval-rec-value">'+p.recs.key+'</div></div>';
+    h+='</div>';
+    h+='<div style="margin-top:20px"><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:10px">Recommended Sections for Your Profile</div>';
+    h+='<div class="eval-section-links">';
+    p.sections.forEach(function(s){h+='<a href="'+s.h+'" class="eval-section-link">'+s.t+'</a>'});
+    h+='</div></div>';
+    h+='<div class="eval-nav" style="border-top:none;margin-top:24px"><button class="eval-btn eval-btn-back" onclick="evalReset()">Retake Evaluator</button><div style="display:flex;gap:10px"><button class="eval-btn eval-btn-next" onclick="evalExportPDF()" style="background:var(--green)">Export PDF Report</button><button class="eval-btn eval-btn-next" onclick="evalExportExcel()" style="background:var(--layer-azure)">Export to Excel</button></div></div>';
+    h+='</div>';
+    document.getElementById('evalBody').innerHTML=h;
+    // Update progress to all done
+    var progH='';EVAL_SEGMENTS.forEach(function(s){progH+='<div class="eval-prog-seg">';for(var i=0;i<5;i++)progH+='<div class="eval-prog-bar done"></div>';progH+='<div class="eval-prog-label done">'+s+'</div></div>'});
+    document.getElementById('evalProgress').innerHTML=progH;
+    // Draw radar after DOM update
+    setTimeout(function(){evalDrawRadar(res.segs)},50);
+    // Show journey breadcrumb bar
+    showJourneyBar(p);
+}
+function evalReset(){evalState={current:0,answers:new Array(20).fill(-1)};dismissJourney();renderEvalQuestion()}
+
+/* ═══════════ JOURNEY BREADCRUMB BAR ═══════════ */
+var journeyProfile=null;
+function showJourneyBar(profile){
+    journeyProfile=profile;
+    var bar=document.getElementById('journeyBar');
+    var dot=document.getElementById('journeyDot');
+    var name=document.getElementById('journeyName');
+    var rec=document.getElementById('journeyRec');
+    var secs=document.getElementById('journeySections');
+    // Set profile data
+    dot.style.background=profile.badge;
+    name.textContent=profile.name;
+    rec.textContent=profile.recs.start;
+    // Build section pills
+    var h='';
+    profile.sections.forEach(function(s){
+        // Extract section ID from href
+        var secId=s.h.replace('#','');
+        h+='<a class="journey-sec-pill" data-journey-sec="'+secId+'" href="'+s.h+'">'+s.t+'</a>';
+    });
+    secs.innerHTML=h;
+    // Show the bar
+    bar.classList.add('visible');
+    // Highlight current section
+    updateJourneyHighlight();
+}
+function updateJourneyHighlight(){
+    if(!journeyProfile)return;
+    var activePanel=document.querySelector('.section-panel.active');
+    var activeId=activePanel?activePanel.getAttribute('data-section'):'';
+    document.querySelectorAll('.journey-sec-pill').forEach(function(pill){
+        pill.classList.toggle('current',pill.getAttribute('data-journey-sec')===activeId);
+    });
+}
+function dismissJourney(){
+    journeyProfile=null;
+    var bar=document.getElementById('journeyBar');
+    if(bar)bar.classList.remove('visible');
+}
+
+/* ═══════════ EXPORT: PDF REPORT ═══════════ */
+function evalExportPDF(){
+    var res=evalCalcScores(),p=EVAL_PROFILES[res.profile];
+    var today=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+    var canvas=document.getElementById('evalRadar');
+    var radarImg='';try{radarImg=canvas.toDataURL('image/png')}catch(e){}
+    var answerRows='';
+    EVAL_QS.forEach(function(q,qi){
+        var segI=evalSegIdx(qi),ai=evalState.answers[qi];
+        var answer=ai>-1?q.opts[ai].t:'Not answered';
+        answerRows+='<tr><td style="padding:8px 12px;border-bottom:1px solid #e8e5e1;font-size:11px;color:#9a948d">'+EVAL_SEGMENTS[segI]+'</td><td style="padding:8px 12px;border-bottom:1px solid #e8e5e1;font-size:11px">Q'+(qi+1)+'</td><td style="padding:8px 12px;border-bottom:1px solid #e8e5e1;font-size:11px;max-width:260px">'+q.q+'</td><td style="padding:8px 12px;border-bottom:1px solid #e8e5e1;font-size:11px;font-weight:600">'+answer+'</td></tr>';
+    });
+    var profileDescs={
+        'pro':'Your organisation is well-served by Power BI Pro or Premium Per User (PPU) licences. You don\u2019t need Fabric capacity today. Your data landscape is straightforward, your analytics are BI-focused, and your scale doesn\u2019t justify the F-SKU investment. Consider revisiting this evaluation in 12 months as your data strategy and user base evolve.',
+        'pbi-fabric':'You need Fabric capacity primarily for the licensing economics and Direct Lake capabilities \u2014 not for data engineering workloads. Your use case is Power BI at scale: enough viewers to justify F64, large enough models to benefit from Direct Lake guardrail upgrades, or a need for Copilot integration. Focus your evaluation on the F64 Decision Architecture section of the accelerator.',
+        'essentials':'You need Fabric beyond just Power BI, but your workloads are focused on 1\u20132 additional capabilities \u2014 likely Dataflows Gen2, a basic Lakehouse, or Data Pipelines. You\u2019re not running heavy Spark workloads yet, but you\u2019re outgrowing pure Power BI. Start with understanding the CU Economy Model and how mixed workloads share the compute pool.',
+        'platform':'You need the full unified Fabric platform \u2014 Spark notebooks, Warehouse or Lakehouse, Power BI, and potentially Real-Time Intelligence. Your data landscape is complex, your analytics maturity is high, and you\u2019re building an enterprise-scale data platform. Read the full accelerator with particular focus on cross-workload CU contention.',
+        'platform-auto':'You need the full Fabric platform AND your data engineering workloads are heavy enough to warrant compute isolation. Spark Autoscale Billing should be evaluated to prevent ETL jobs competing with Power BI for CU budget. Consider multi-capacity architecture and read the Spark Burst & Autoscale section carefully.'
+    };
+    var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Fabric Evaluator \u2014 '+p.name+' Profile Report</title><style>@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");*{margin:0;padding:0;box-sizing:border-box}body{font-family:Inter,sans-serif;color:#2d2b28;padding:40px 52px;max-width:900px;margin:0 auto;font-size:13px;line-height:1.6}h1{font-size:26px;font-weight:700;letter-spacing:-0.5px;margin-bottom:4px}h2{font-size:18px;font-weight:700;margin-top:32px;margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid #C4653A;letter-spacing:-0.3px}h3{font-size:14px;font-weight:600;margin-top:18px;margin-bottom:6px}.badge{display:inline-block;padding:5px 18px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px}.meta{color:#9a948d;font-size:12px;margin-bottom:24px}.profile-box{background:#faf8f5;border:2px solid #e8e5e1;border-radius:12px;padding:28px;margin:20px 0}.seg-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0;text-align:center}.seg-item{background:#faf8f5;border-radius:8px;padding:14px 8px}.seg-val{font-size:26px;font-weight:700;color:#C4653A}.seg-lab{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:#9a948d;margin-top:4px}.rec-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}.rec-card{background:#faf8f5;border-radius:8px;padding:16px}.rec-title{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#9a948d;margin-bottom:4px}.rec-val{font-size:14px;font-weight:600}table{width:100%;border-collapse:collapse;margin-top:8px}th{text-align:left;padding:8px 12px;background:#f5f2ee;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:#9a948d;border-bottom:2px solid #e8e5e1}td{vertical-align:top}.disclaimer{margin-top:32px;padding:16px;background:#faf8f5;border-radius:8px;font-size:11px;color:#9a948d}@media print{body{padding:20px 28px}h1{font-size:22px}.profile-box{break-inside:avoid}table{font-size:10px}}</style></head><body>';
+    html+='<div style="display:flex;align-items:center;gap:12px;margin-bottom:6px"><h1>Fabric Evaluator</h1></div>';
+    html+='<div class="meta">Profile Report &middot; Generated '+today+' &middot; Fabric Capacity Architecture Accelerator</div>';
+    html+='<h2>Your Fabric Profile</h2>';
+    html+='<div class="profile-box"><div class="badge" style="background:rgba(196,101,58,0.1);color:#C4653A;margin-bottom:12px">'+p.name+'</div>';
+    html+='<p style="line-height:1.7">'+profileDescs[p.id]+'</p></div>';
+    html+='<h2>Segment Scores</h2>';
+    html+='<div class="seg-grid">';
+    EVAL_SEGMENTS.forEach(function(s,i){html+='<div class="seg-item"><div class="seg-val">'+res.segs[i]+'%</div><div class="seg-lab">'+s+'</div></div>'});
+    html+='</div>';
+    if(radarImg){html+='<div style="text-align:center;margin:16px 0"><img src="'+radarImg+'" width="280" height="280" alt="Radar chart"></div>'}
+    html+='<h2>Recommendations</h2>';
+    html+='<div class="rec-grid">';
+    html+='<div class="rec-card"><div class="rec-title">Recommended Starting Point</div><div class="rec-val">'+p.recs.start+'</div></div>';
+    html+='<div class="rec-card"><div class="rec-title">Suggested Architecture</div><div class="rec-val">'+p.recs.arch+'</div></div>';
+    html+='</div>';
+    html+='<div class="rec-grid" style="grid-template-columns:1fr"><div class="rec-card"><div class="rec-title">Key Decision</div><div class="rec-val">'+p.recs.key+'</div></div></div>';
+    html+='<h3>Recommended Accelerator Sections</h3><p>';
+    p.sections.forEach(function(s,i){html+=(i>0?', ':'')+s.t});
+    html+='</p>';
+    html+='<h2>Full Response Detail</h2>';
+    html+='<table><thead><tr><th>Segment</th><th>#</th><th>Question</th><th>Your Answer</th></tr></thead><tbody>'+answerRows+'</tbody></table>';
+    html+='<div class="disclaimer"><strong>Disclaimer:</strong> This profile is an indicative assessment based on self-reported answers. It is not a substitute for a formal capacity planning engagement with Microsoft or a certified partner. Pricing data, SKU capabilities, and licensing terms are subject to change. Always verify against the latest Microsoft documentation at <em>learn.microsoft.com</em> and the Azure Pricing Calculator.</div>';
+    html+='</body></html>';
+    var blob=new Blob([html],{type:'text/html'});
+    var url=URL.createObjectURL(blob);
+    var win=window.open(url,'_blank');
+    if(win){win.onload=function(){setTimeout(function(){win.print()},500)}}
+    else{var a=document.createElement('a');a.href=url;a.download='Fabric-Evaluator-Profile-Report.html';a.click()}
+}
+
+/* ═══════════ EXPORT: EXCEL (CSV) ═══════════ */
+function evalExportExcel(){
+    var res=evalCalcScores(),p=EVAL_PROFILES[res.profile];
+    var today=new Date().toISOString().slice(0,10);
+    var rows=[
+        ['Fabric Evaluator \u2014 Profile Export'],
+        ['Generated',today],
+        [''],
+        ['PROFILE RESULT'],
+        ['Profile Name',p.name],
+        ['Overall Score',res.total+'%'],
+        ['Platform Breadth Score',res.breadth+'%'],
+        ['Scale Intensity Score',res.scale+'%'],
+        [''],
+        ['SEGMENT SCORES'],
+        ['Segment','Score (%)','Max Possible']
+    ];
+    EVAL_SEGMENTS.forEach(function(s,i){rows.push([s,res.segs[i]+'%','100%'])});
+    rows.push(['']);
+    rows.push(['RECOMMENDATIONS']);
+    rows.push(['Starting Point',p.recs.start]);
+    rows.push(['Suggested Architecture',p.recs.arch]);
+    rows.push(['Key Decision',p.recs.key]);
+    rows.push(['Recommended Sections',p.sections.map(function(s){return s.t}).join(', ')]);
+    rows.push(['']);
+    rows.push(['FULL RESPONSE DETAIL']);
+    rows.push(['#','Segment','Question','Your Answer','Breadth Score','Scale Score']);
+    EVAL_QS.forEach(function(q,qi){
+        var segI=evalSegIdx(qi),ai=evalState.answers[qi];
+        var answer=ai>-1?q.opts[ai].t:'Not answered';
+        var bs=ai>-1?q.opts[ai].b:'';
+        var ss=ai>-1?q.opts[ai].s:'';
+        rows.push([(qi+1),EVAL_SEGMENTS[segI],q.q,answer,bs,ss]);
+    });
+    rows.push(['']);
+    rows.push(['PROFILE DEFINITIONS']);
+    rows.push(['Profile','Description']);
+    EVAL_PROFILES.forEach(function(pr){rows.push([pr.name,pr.desc])});
+    // Build CSV with proper escaping
+    var csv='\uFEFF'; // BOM for Excel UTF-8
+    rows.forEach(function(r){
+        csv+=r.map(function(c){
+            var s=String(c||'');
+            if(s.indexOf(',')>-1||s.indexOf('"')>-1||s.indexOf('\n')>-1)return '"'+s.replace(/"/g,'""')+'"';
+            return s;
+        }).join(',')+'\r\n';
+    });
+    var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');a.href=url;a.download='Fabric-Evaluator-Results-'+today+'.csv';a.click();
+    URL.revokeObjectURL(url);
+}
+
+document.addEventListener('DOMContentLoaded',function(){updateSmoothing();updateTCO();buildVCoreChart();setupNav();renderEvalQuestion()});
+</script>
+</body>
+</html>
